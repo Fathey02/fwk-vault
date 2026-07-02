@@ -1,0 +1,232 @@
+{
+  "entities": {
+    "Book": {
+      "title": "Book",
+      "description": "Information about a book in the library",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "category": { "type": "string" },
+        "subCategory": { "type": "string" },
+        "description": { "type": "string" },
+        "coverUrl": { "type": "string" },
+        "pages": { "type": "number" },
+        "isbn": { "type": "string" },
+        "availableCount": { "type": "number" },
+        "totalCount": { "type": "number" }
+      },
+      "required": ["title", "author", "category", "description", "availableCount", "totalCount"]
+    },
+    "Loan": {
+      "title": "Loan",
+      "description": "Represents a book loan/borrowing transaction",
+      "type": "object",
+      "properties": {
+        "bookId": { "type": "string" },
+        "bookTitle": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentId": { "type": "string" },
+        "borrowDate": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "returnDate": { "type": "string" },
+        "status": { "type": "string" },
+        "qrCodeData": { "type": "string" }
+      },
+      "required": ["bookId", "bookTitle", "studentName", "studentId", "borrowDate", "dueDate", "status", "qrCodeData"]
+    },
+    "GraduationProject": {
+      "title": "GraduationProject",
+      "description": "A completed or documented student graduation project",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "students": { "type": "array" },
+        "advisor": { "type": "string" },
+        "year": { "type": "number" },
+        "abstract": { "type": "string" },
+        "category": { "type": "string" },
+        "isCompleted": { "type": "boolean" },
+        "coverUrl": { "type": "string" },
+        "githubUrl": { "type": "string" }
+      },
+      "required": ["title", "students", "advisor", "year", "abstract", "category", "isCompleted"]
+    },
+    "IncompleteProject": {
+      "title": "IncompleteProject",
+      "description": "A draft/upload of an incomplete project/covers by students",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "students": { "type": "array" },
+        "description": { "type": "string" },
+        "coverUrl": { "type": "string" },
+        "uploadedAt": { "type": "string" }
+      },
+      "required": ["title", "students", "description", "coverUrl", "uploadedAt"]
+    },
+    "Achievement": {
+      "title": "Achievement",
+      "description": "Academic or research achievement award",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string" },
+        "recipient": { "type": "string" },
+        "certificateUrl": { "type": "string" }
+      },
+      "required": ["title", "date", "description", "type", "recipient"]
+    },
+    "Competition": {
+      "title": "Competition",
+      "description": "Competitions participated in or won by the college",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "placement": { "type": "string" },
+        "description": { "type": "string" },
+        "teamMembers": { "type": "array" },
+        "certificateUrl": { "type": "string" }
+      },
+      "required": ["title", "date", "placement", "description", "teamMembers"]
+    },
+    "LibrarySpace": {
+      "title": "LibrarySpace",
+      "description": "An interactive study hall, vr lab or study space booking",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "currentBooking": { "type": "object" }
+      },
+      "required": ["id", "name", "type", "status"]
+    },
+    "StudentRegistration": {
+      "title": "StudentRegistration",
+      "description": "New student library membership registration",
+      "type": "object",
+      "properties": {
+        "studentName": { "type": "string" },
+        "studentId": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "department": { "type": "string" },
+        "activities": { "type": "array" },
+        "registrationDate": { "type": "string" },
+        "qrCodeData": { "type": "string" }
+      },
+      "required": ["studentName", "studentId", "email", "phone", "department", "activities", "registrationDate", "qrCodeData"]
+    },
+    "LibraryInquiry": {
+      "title": "LibraryInquiry",
+      "description": "Guidelines or general inquiry question and answer",
+      "type": "object",
+      "properties": {
+        "question": { "type": "string" },
+        "answer": { "type": "string" },
+        "category": { "type": "string" }
+      },
+      "required": ["question", "answer", "category"]
+    },
+    "PrintRequest": {
+      "title": "PrintRequest",
+      "description": "Graduation project print and binding request",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "projectTitle": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentId": { "type": "string" },
+        "paperSize": { "type": "string", "enum": ["A4", "A3"] },
+        "coverType": { "type": "string", "enum": ["hardcover", "softcover", "spiral"] },
+        "copies": { "type": "number" },
+        "extraNotes": { "type": "string" },
+        "requestedAt": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "printing", "ready", "completed"] }
+      },
+      "required": ["projectTitle", "studentName", "studentId", "paperSize", "coverType", "copies", "requestedAt", "status"]
+    },
+    "BroadcastNotification": {
+      "title": "BroadcastNotification",
+      "description": "Admin broadcast notification targeting specific student tiers",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "targetAudience": { "type": "string", "enum": ["college_only", "other_only", "all"] },
+        "createdAt": { "type": "string" },
+        "senderName": { "type": "string" }
+      },
+      "required": ["title", "content", "targetAudience", "createdAt", "senderName"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Student-Admin live support helpdesk chat messages",
+      "type": "object",
+      "properties": {
+        "studentName": { "type": "string" },
+        "studentId": { "type": "string" },
+        "message": { "type": "string" },
+        "senderRole": { "type": "string", "enum": ["student", "admin"] },
+        "timestamp": { "type": "string" },
+        "resolved": { "type": "boolean" }
+      },
+      "required": ["studentName", "studentId", "message", "senderRole", "timestamp"]
+    }
+  },
+  "firestore": {
+    "books": {
+      "schema": "Book",
+      "description": "Collection of all physical and educational books"
+    },
+    "loans": {
+      "schema": "Loan",
+      "description": "Loan transaction records for borrowed books"
+    },
+    "projects": {
+      "schema": "GraduationProject",
+      "description": "Student graduation projects repository"
+    },
+    "incomplete_projects": {
+      "schema": "IncompleteProject",
+      "description": "Incomplete student research and project cover page drafts"
+    },
+    "achievements": {
+      "schema": "Achievement",
+      "description": "College and library achievements"
+    },
+    "competitions": {
+      "schema": "Competition",
+      "description": "Hackathons and programming competitions"
+    },
+    "spaces": {
+      "schema": "LibrarySpace",
+      "description": "Interactive study spaces and reservation statuses"
+    },
+    "student_registrations": {
+      "schema": "StudentRegistration",
+      "description": "Student portal library registration database"
+    },
+    "inquiries": {
+      "schema": "LibraryInquiry",
+      "description": "Library guidelines and inquiries"
+    },
+    "print_requests": {
+      "schema": "PrintRequest",
+      "description": "Graduation project printing and binding requests queue"
+    },
+    "notifications": {
+      "schema": "BroadcastNotification",
+      "description": "System and administrative broadcast notifications"
+    },
+    "chat_messages": {
+      "schema": "ChatMessage",
+      "description": "Live helpdesk support chat channels"
+    }
+  }
+}

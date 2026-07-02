@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (First block is a default-deny catch-all)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Books Collection
+    match /books/{bookId} {
+      allow read, write: if true;
+    }
+
+    // 3. Loans Collection
+    match /loans/{loanId} {
+      allow read, write: if true;
+    }
+
+    // 4. Projects Collection (Graduation Projects)
+    match /projects/{projectId} {
+      allow read, write: if true;
+    }
+
+    // 5. Incomplete Projects Collection
+    match /incomplete_projects/{projectId} {
+      allow read, write: if true;
+    }
+
+    // 6. Achievements Collection
+    match /achievements/{achievementId} {
+      allow read, write: if true;
+    }
+
+    // 7. Competitions Collection
+    match /competitions/{competitionId} {
+      allow read, write: if true;
+    }
+
+    // 8. Spaces Collection (Interactive Library Map/Bookings)
+    match /spaces/{spaceId} {
+      allow read, write: if true;
+    }
+
+    // 9. Student Registrations Collection
+    match /student_registrations/{registrationId} {
+      allow read, write: if true;
+    }
+
+    // 10. Inquiries Collection (Library FAQ)
+    match /inquiries/{inquiryId} {
+      allow read, write: if true;
+    }
+
+    // 11. Print Requests Collection
+    match /print_requests/{requestId} {
+      allow read, write: if true;
+    }
+
+    // 12. Broadcast Notifications Collection
+    match /notifications/{notificationId} {
+      allow read, write: if true;
+    }
+
+    // 13. Chat Messages Collection
+    match /chat_messages/{messageId} {
+      allow read, write: if true;
+    }
+  }
+}

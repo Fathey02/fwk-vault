@@ -1,0 +1,256 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --bg: #0f172a;
+  --panel: #1e293b;
+  --accent: #6366f1;
+  --accent-glow: rgba(99, 102, 241, 0.15);
+  --text: #f8fafc;
+  --text-dim: #94a3b8;
+  --border: rgba(255, 255, 255, 0.1);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+/* Global body overrides for Bento dark theme */
+body {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: 'Inter', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar customizations */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Overriding white backgrounds to Bento Panels */
+.bg-white,
+[class*="bg-white"],
+div.bg-white,
+section.bg-white,
+nav.bg-white,
+aside.bg-white,
+header.bg-white {
+  background-color: var(--panel) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+/* Background gradient or subtle grid pattern */
+#app-root {
+  background-color: var(--bg) !important;
+  background-image: radial-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px) !important;
+  background-size: 24px 24px !important;
+}
+
+/* Headers and Navigation panels */
+header, #app-header {
+  background-color: rgba(30, 41, 59, 0.8) !important;
+  backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+/* General component borders mapping */
+.border,
+.border-gray-100,
+.border-gray-200,
+.border-slate-100,
+.border-slate-200,
+.border-indigo-100,
+.border-emerald-100,
+.border-blue-100,
+.border-amber-100 {
+  border-color: var(--border) !important;
+}
+
+/* Text coloring overrides */
+.text-gray-900,
+.text-gray-800,
+.text-gray-700,
+.text-slate-900,
+.text-slate-800,
+.text-slate-700,
+.text-indigo-900,
+.text-indigo-950,
+.text-emerald-900,
+.text-emerald-950 {
+  color: var(--text) !important;
+}
+
+.text-gray-600,
+.text-gray-500,
+.text-gray-400,
+.text-slate-600,
+.text-slate-500,
+.text-slate-400 {
+  color: var(--text-dim) !important;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Space Grotesk', sans-serif !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Inputs, Select arrays, and textareas styling */
+input, 
+select, 
+textarea,
+.bg-gray-50,
+.bg-slate-50,
+.bg-slate-50\/50,
+.bg-slate-100,
+.bg-slate-100\/50 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--accent-glow) !important;
+}
+
+/* Buttons and active controls */
+.bg-blue-600,
+.bg-indigo-600,
+.bg-purple-600 {
+  background-color: var(--accent) !important;
+  color: #ffffff !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.bg-blue-600:hover,
+.bg-indigo-600:hover,
+.bg-purple-600:hover {
+  background-color: #4f46e5 !important;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+.text-blue-600,
+.text-indigo-600,
+.text-purple-600 {
+  color: #a5b4fc !important;
+}
+
+/* Green/Success themes */
+.bg-emerald-50, .bg-emerald-100, .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: var(--success) !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+}
+.text-emerald-600, .text-emerald-500 {
+  color: var(--success) !important;
+}
+
+/* Warning themes */
+.bg-amber-50, .bg-amber-100, .bg-amber-500\/10 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+  color: var(--warning) !important;
+  border: 1px solid rgba(245, 158, 11, 0.2) !important;
+}
+.text-amber-600, .text-amber-500, .text-amber-700 {
+  color: var(--warning) !important;
+}
+
+/* Danger/Alert themes */
+.bg-rose-50, .bg-rose-100, .bg-rose-500\/10, .bg-rose-600 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  color: var(--danger) !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+}
+.text-rose-600, .text-rose-500 {
+  color: var(--danger) !important;
+}
+
+/* Sidebar navigation item overrides */
+nav button, .nav-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+nav button:hover:not(.bg-blue-600):not(.bg-indigo-600) {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  color: var(--text) !important;
+}
+
+/* Cards & Grid list element layouts */
+.card, 
+[class*="rounded-2xl"][class*="border"] {
+  background-color: var(--panel) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.card:hover,
+[class*="rounded-2xl"][class*="border"]:hover {
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* RTL layout fixes */
+.rtl {
+  direction: rtl;
+}
+.ltr {
+  direction: ltr;
+}
+
+/* Table styling fixes */
+th, td {
+  border-color: var(--border) !important;
+}
+thead {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+}
+tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.01) !important;
+}
+
+/* Footers and modals */
+footer, #app-footer {
+  background-color: var(--bg) !important;
+  border-top: 1px solid var(--border) !important;
+}
+
+.modal-content, [role="dialog"] {
+  background-color: var(--panel) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Live Simulation Controls styling */
+input[type="range"] {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+input[type="range"]::-webkit-slider-thumb {
+  background: var(--accent) !important;
+}

@@ -1,0 +1,6 @@
+{
+  "name": "FWK Library",
+  "description": "An integrated portal for the College of Computer Science and Information Library featuring book catalogs, graduation projects, seat bookings, student activity registration, and AI-powered academic assistance.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
