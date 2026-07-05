@@ -47,6 +47,7 @@ interface LibraryCatalogProps {
   onAddBook: (book: Omit<Book, "id">) => Promise<void>;
   onBorrowBook: (loan: Omit<Loan, "id">) => Promise<void>;
   onReturnBook: (loanId: string, bookId: string) => Promise<void>;
+  currentUserRole?: "internal_student" | "external_student" | "admin";
 }
 
 export default function LibraryCatalog({
@@ -55,7 +56,8 @@ export default function LibraryCatalog({
   loans,
   onAddBook,
   onBorrowBook,
-  onReturnBook
+  onReturnBook,
+  currentUserRole
 }: LibraryCatalogProps) {
 
   // Search and Filtering States
@@ -208,13 +210,15 @@ export default function LibraryCatalog({
         </div>
         
         {/* Advanced Upload Book button */}
-        <button
-          onClick={() => setShowUploadModal(true)}
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          {isArabic ? "رفع وإدراج كتاب مالي/تجاري" : "Upload Business/Income Book"}
-        </button>
+        {currentUserRole === "admin" && (
+          <button
+            onClick={() => setShowUploadModal(true)}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            {isArabic ? "رفع وإدراج كتاب مالي/تجاري" : "Upload Business/Income Book"}
+          </button>
+        )}
       </div>
 
       {/* Advanced Filter Tab System */}
@@ -391,7 +395,7 @@ export default function LibraryCatalog({
           </div>
         </div>
 
-        {loans.length === 0 ? (
+        {loans.filter(loan => loan.status !== "returned").length === 0 ? (
           <div className="text-center py-8 text-gray-400 text-xs">
             {isArabic ? "لا توجد أي عمليات استعارة نشطة حالياً." : "No active library loans logged in system."}
           </div>
@@ -411,7 +415,7 @@ export default function LibraryCatalog({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {loans.map((loan) => (
+                {loans.filter(loan => loan.status !== "returned").map((loan) => (
                   <tr key={loan.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-3 font-medium text-gray-800">{loan.bookTitle}</td>
                     <td className="p-3 text-gray-600">{loan.studentName}</td>

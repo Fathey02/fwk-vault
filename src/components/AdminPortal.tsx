@@ -15,7 +15,11 @@ import {
   UserCheck,
   Smartphone,
   Camera,
-  X
+  X,
+  BookOpen,
+  BookMarked,
+  Trello,
+  Plus
 } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
 import { 
@@ -24,7 +28,10 @@ import {
   ChatMessage, 
   LibrarySpace, 
   StudentRegistration,
-  Loan
+  Loan,
+  Book,
+  GraduationProject,
+  IncompleteProject
 } from "../types";
 
 interface AdminPortalProps {
@@ -44,6 +51,15 @@ interface AdminPortalProps {
   onReleaseSpace: (spaceId: string) => Promise<void>;
   onUpdateLibraryStatus: (studentRegId: string, inLibrary: boolean, accessTime: string) => Promise<void>;
   onClearProject: () => Promise<void>;
+  books: Book[];
+  onAddBook: (book: Omit<Book, "id">) => Promise<void>;
+  onDeleteBook: (id: string) => Promise<void>;
+  completedProjects: GraduationProject[];
+  incompleteProjects: IncompleteProject[];
+  onAddGradProject: (proj: Omit<GraduationProject, "id">) => Promise<void>;
+  onAddIncompleteProject: (proj: Omit<IncompleteProject, "id">) => Promise<void>;
+  onDeleteGradProject: (id: string) => Promise<void>;
+  onDeleteIncompleteProject: (id: string) => Promise<void>;
 }
 
 export default function AdminPortal({
@@ -62,10 +78,46 @@ export default function AdminPortal({
   onReplyToChat,
   onReleaseSpace,
   onUpdateLibraryStatus,
-  onClearProject
+  onClearProject,
+  books,
+  onAddBook,
+  onDeleteBook,
+  completedProjects,
+  incompleteProjects,
+  onAddGradProject,
+  onAddIncompleteProject,
+  onDeleteGradProject,
+  onDeleteIncompleteProject
 }: AdminPortalProps) {
   // Tabs within Admin panel
-  const [adminTab, setAdminTab] = useState<"stats" | "printing" | "broadcast" | "chat" | "spaces" | "gate" | "system">("stats");
+  const [adminTab, setAdminTab] = useState<"stats" | "printing" | "broadcast" | "chat" | "spaces" | "gate" | "system" | "books" | "graduationProjects">("stats");
+
+  // Add Book states
+  const [bookTitle, setBookTitle] = useState("");
+  const [bookAuthor, setBookAuthor] = useState("");
+  const [bookCategory, setBookCategory] = useState<"recreational" | "educational" | "curricula" | "income-boosting">("income-boosting");
+  const [bookSubCategory, setBookSubCategory] = useState("");
+  const [bookDesc, setBookDesc] = useState("");
+  const [bookPages, setBookPages] = useState(200);
+  const [bookIsbn, setBookIsbn] = useState("");
+  const [bookTotal, setBookTotal] = useState(5);
+  const [bookSuccess, setBookSuccess] = useState(false);
+
+  // Add Completed Project states
+  const [projTitle, setProjTitle] = useState("");
+  const [projStudents, setProjStudents] = useState("");
+  const [projAdvisor, setProjAdvisor] = useState("");
+  const [projYear, setProjYear] = useState(2026);
+  const [projAbstract, setProjAbstract] = useState("");
+  const [projCategory, setProjCategory] = useState<"AI" | "Cybersecurity" | "Software Engineering" | "Data Science" | "Network">("AI");
+  const [projGithub, setProjGithub] = useState("");
+  const [projSuccess, setProjSuccess] = useState(false);
+
+  // Add Incomplete Project states
+  const [incTitle, setIncTitle] = useState("");
+  const [incStudents, setIncStudents] = useState("");
+  const [incDesc, setIncDesc] = useState("");
+  const [incSuccess, setIncSuccess] = useState(false);
 
   // Notification form states
   const [notifTitle, setNotifTitle] = useState("");
@@ -314,6 +366,84 @@ export default function AdminPortal({
     }
   };
 
+  const handleAdminAddBook = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bookTitle || !bookAuthor) return;
+    try {
+      await onAddBook({
+        title: bookTitle,
+        author: bookAuthor,
+        category: bookCategory,
+        subCategory: bookSubCategory || "General",
+        description: bookDesc || "No description provided.",
+        pages: Number(bookPages) || 100,
+        isbn: bookIsbn || "N/A",
+        totalCount: Number(bookTotal) || 5,
+        availableCount: Number(bookTotal) || 5,
+        coverUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=2787&auto=format&fit=crop"
+      });
+      setBookTitle("");
+      setBookAuthor("");
+      setBookSubCategory("");
+      setBookDesc("");
+      setBookPages(200);
+      setBookIsbn("");
+      setBookTotal(5);
+      setBookSuccess(true);
+      setTimeout(() => setBookSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAdminAddGradProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!projTitle || !projStudents) return;
+    try {
+      await onAddGradProject({
+        title: projTitle,
+        students: projStudents.split(",").map(s => s.trim()),
+        advisor: projAdvisor || "N/A",
+        year: Number(projYear) || 2026,
+        abstract: projAbstract || "No abstract.",
+        category: projCategory,
+        isCompleted: true,
+        githubUrl: projGithub || "",
+        coverUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2940"
+      });
+      setProjTitle("");
+      setProjStudents("");
+      setProjAdvisor("");
+      setProjAbstract("");
+      setProjGithub("");
+      setProjSuccess(true);
+      setTimeout(() => setProjSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAdminAddIncompleteProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!incTitle || !incStudents) return;
+    try {
+      await onAddIncompleteProject({
+        title: incTitle,
+        students: incStudents.split(",").map(s => s.trim()),
+        description: incDesc || "No description.",
+        coverUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=2940&auto=format&fit=crop",
+        uploadedAt: new Date().toLocaleString()
+      });
+      setIncTitle("");
+      setIncStudents("");
+      setIncDesc("");
+      setIncSuccess(true);
+      setTimeout(() => setIncSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Stats calculation
   const totalStudents = registrations.length;
   const activeBookings = spaces.filter(s => s.status === "booked").length;
@@ -405,6 +535,24 @@ export default function AdminPortal({
           >
             <Smartphone className="w-3.5 h-3.5" />
             <span>{isArabic ? "جهاز مسح QR" : "QR scanner"}</span>
+          </button>
+          <button
+            onClick={() => setAdminTab("books")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              adminTab === "books" ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+            }`}
+          >
+            <BookMarked className="w-3.5 h-3.5" />
+            <span>{isArabic ? "إدارة الكتب" : "Manage Books"}</span>
+          </button>
+          <button
+            onClick={() => setAdminTab("graduationProjects")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              adminTab === "graduationProjects" ? "bg-indigo-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+            }`}
+          >
+            <Trello className="w-3.5 h-3.5" />
+            <span>{isArabic ? "إدارة المشاريع" : "Manage Projects"}</span>
           </button>
           <button
             onClick={() => setAdminTab("system")}
@@ -1183,6 +1331,479 @@ export default function AdminPortal({
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW: BOOKS MANAGEMENT (UPLOAD / DELETE) */}
+      {adminTab === "books" && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+            <div className="border-b border-gray-100 pb-3 flex items-center justify-between">
+              <span className="text-xs text-emerald-600 font-bold">
+                {isArabic ? "رفع وحذف الكتب المتوفرة بالكلية" : "Upload and remove books catalog"}
+              </span>
+              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                <BookMarked className="w-5 h-5 text-emerald-600" />
+                {isArabic ? "إدارة دليل الكتب المتوفرة بالمكتبة" : "Manage Available Library Books"}
+              </h3>
+            </div>
+
+            {/* Book Upload Form */}
+            <form onSubmit={handleAdminAddBook} className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-4 text-right">
+              <h4 className="font-bold text-slate-800 text-xs">
+                {isArabic ? "➕ إضافة وإدراج كتاب جديد متوفر بالجامعة" : "➕ Add and Insert New Book Available at University"}
+              </h4>
+
+              {bookSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-xs font-bold">
+                  {isArabic ? "✅ تم إضافة الكتاب بنجاح ونشره في دليل المكتبة المتاح للطلاب!" : "✅ Book uploaded successfully and published to student catalog!"}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "اسم المؤلف" : "Author Name"}</label>
+                  <input
+                    type="text"
+                    required
+                    value={bookAuthor}
+                    onChange={(e) => setBookAuthor(e.target.value)}
+                    placeholder={isArabic ? "اسم الكاتب / المؤلف" : "e.g. Dr. John Doe"}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "عنوان الكتاب" : "Book Title"}</label>
+                  <input
+                    type="text"
+                    required
+                    value={bookTitle}
+                    onChange={(e) => setBookTitle(e.target.value)}
+                    placeholder={isArabic ? "أدخل عنوان الكتاب" : "e.g. Intro to Algorithms"}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "عدد الصفحات" : "Pages Count"}</label>
+                  <input
+                    type="number"
+                    value={bookPages}
+                    onChange={(e) => setBookPages(Number(e.target.value))}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "الرقم التسلسلي الدولي ISBN" : "ISBN"}</label>
+                  <input
+                    type="text"
+                    value={bookIsbn}
+                    onChange={(e) => setBookIsbn(e.target.value)}
+                    placeholder="e.g. 978-3-16-148410-0"
+                    className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "التصنيف الرئيسي للكتاب" : "Book Category"}</label>
+                  <select
+                    value={bookCategory}
+                    onChange={(e) => setBookCategory(e.target.value as any)}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right"
+                  >
+                    <option value="curricula">{isArabic ? "مناهج دراسية وأبحاث" : "Academic Curricula"}</option>
+                    <option value="educational">{isArabic ? "كتب علمية وتعليمية" : "Educational"}</option>
+                    <option value="recreational">{isArabic ? "روايات وكتب ترفيهية" : "Novels / Recreational"}</option>
+                    <option value="income-boosting">{isArabic ? "مصادر ريادة الأعمال والاستثمار" : "Business / Investment"}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "التصنيف الفرعي" : "Sub Category"}</label>
+                  <input
+                    type="text"
+                    value={bookSubCategory}
+                    onChange={(e) => setBookSubCategory(e.target.value)}
+                    placeholder={isArabic ? "مثال: ريادة أعمال، هاسكل، جافا سكريبت" : "e.g. React, Cybersecurity"}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "الكمية الكلية المتوفرة للطلاب بالمكتبة" : "Total Stock Qty"}</label>
+                  <input
+                    type="number"
+                    value={bookTotal}
+                    onChange={(e) => setBookTotal(Number(e.target.value))}
+                    className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "نبذة مختصرة عن الكتاب" : "Book Abstract Description"}</label>
+                <textarea
+                  value={bookDesc}
+                  onChange={(e) => setBookDesc(e.target.value)}
+                  placeholder={isArabic ? "اكتب تفاصيل أو وصف الكتاب هنا..." : "Type description details..."}
+                  rows={2}
+                  className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right"
+                />
+              </div>
+
+              <div className="flex justify-start">
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition-all shadow-sm cursor-pointer"
+                >
+                  {isArabic ? "إدراج الكتاب بالمكتبة" : "Insert Book into Library Database"}
+                </button>
+              </div>
+            </form>
+
+            {/* Book Delete / Display List */}
+            <div className="space-y-3 text-right">
+              <h4 className="font-bold text-gray-700 text-xs">
+                {isArabic ? "📖 جرد وإزالة كتب المكتبة الحالية (لحذف الكتب غير المتاحة)" : "📖 Library Book Audit & Removal (Delete unavailable books)"}
+              </h4>
+              <div className="overflow-x-auto border border-gray-100 rounded-2xl">
+                <table className="w-full text-xs text-right border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-500 border-b border-gray-100">
+                      <th className="p-3 font-semibold">{isArabic ? "اسم المؤلف" : "Author"}</th>
+                      <th className="p-3 font-semibold">{isArabic ? "التصنيف" : "Category"}</th>
+                      <th className="p-3 font-semibold">{isArabic ? "المخزون المتوفر" : "Available / Total Stock"}</th>
+                      <th className="p-3 font-semibold">{isArabic ? "عنوان الكتاب" : "Book Title"}</th>
+                      <th className="p-3 font-semibold text-center">{isArabic ? "إجراء" : "Action"}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 font-sans">
+                    {books.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-6 text-gray-400">
+                          {isArabic ? "لا توجد كتب مضافة حالياً." : "No books added."}
+                        </td>
+                      </tr>
+                    ) : (
+                      books.map((b) => (
+                        <tr key={b.id} className="hover:bg-slate-50 transition-colors border-b border-gray-100">
+                          <td className="p-3 text-gray-600">{b.author}</td>
+                          <td className="p-3 text-gray-500 font-mono text-[10px]">{b.category}</td>
+                          <td className="p-3 text-gray-600">{b.availableCount} / {b.totalCount}</td>
+                          <td className="p-3 font-semibold text-gray-800">{b.title}</td>
+                          <td className="p-3 text-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(isArabic ? `هل أنت متأكد من حذف وإزالة كتاب (${b.title}) نهائياً من الرفوف الرقمية؟` : `Are you sure you want to delete "${b.title}"?`)) {
+                                  onDeleteBook(b.id);
+                                }
+                              }}
+                              className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 font-bold rounded-lg text-[10px] transition-all cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>{isArabic ? "حذف الكتاب" : "Remove Book"}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW: GRADUATION PROJECTS MANAGEMENT (ADD / DELETE) */}
+      {adminTab === "graduationProjects" && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+            <div className="border-b border-gray-100 pb-3 flex items-center justify-between">
+              <span className="text-xs text-indigo-600 font-bold">
+                {isArabic ? "صلاحيات المشرف الحصرية لإضافة وإزالة المشاريع والمخططات" : "Admin exclusive control to create and remove graduation projects"}
+              </span>
+              <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                <Trello className="w-5 h-5 text-indigo-600" />
+                {isArabic ? "إدارة مشاريع التخرج والمسودات المعلقة" : "Manage Completed & Incomplete Projects"}
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Form 1: Add Completed Project */}
+              <form onSubmit={handleAdminAddGradProject} className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-4 text-right flex flex-col justify-between">
+                <div className="space-y-4">
+                  <h4 className="font-bold text-indigo-800 text-xs">
+                    {isArabic ? "🏆 إضافة مشروع تخرج مكتمل (خاص بالمشرف)" : "🏆 Add Completed Graduation Project"}
+                  </h4>
+
+                  {projSuccess && (
+                    <div className="p-3 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-xl text-xs font-bold">
+                      {isArabic ? "✅ تم إضافة المشروع المكتمل ونشره بنجاح للطلاب!" : "✅ Completed graduation project saved and published!"}
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "عنوان مشروع التخرج" : "Project Title"}</label>
+                    <input
+                      type="text"
+                      required
+                      value={projTitle}
+                      onChange={(e) => setProjTitle(e.target.value)}
+                      placeholder={isArabic ? "مثال: نظام ذكي لكشف الغش بالذكاء الاصطناعي" : "e.g. AI-driven proctoring software"}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none text-right"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gray-500 font-semibold block">
+                      {isArabic ? "أسماء الطلاب المشاركين (افصل بينهم بفاصلة ,)" : "Student Participants (comma separated)"}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={projStudents}
+                      onChange={(e) => setProjStudents(e.target.value)}
+                      placeholder={isArabic ? "أحمد مصطفى, محمد خالد, عمر شريف" : "e.g. Mark, Luke, John"}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none text-right"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "الدكتور المشرف" : "Supervisor / Advisor"}</label>
+                      <input
+                        type="text"
+                        value={projAdvisor}
+                        onChange={(e) => setProjAdvisor(e.target.value)}
+                        placeholder="e.g. Prof. Alice"
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none text-right"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "تصنيف التخصص" : "Specialization Category"}</label>
+                      <select
+                        value={projCategory}
+                        onChange={(e) => setProjCategory(e.target.value as any)}
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none text-right"
+                      >
+                        <option value="AI">{isArabic ? "ذكاء اصطناعي وتعلم آلة" : "Artificial Intelligence"}</option>
+                        <option value="Cybersecurity">{isArabic ? "أمن سيبراني وتشفير" : "Cybersecurity"}</option>
+                        <option value="Software Engineering">{isArabic ? "هندسة برمجيات وتطبيقات" : "Software Engineering"}</option>
+                        <option value="Data Science">{isArabic ? "علم بيانات وتحليلات ضخمة" : "Data Science"}</option>
+                        <option value="Network">{isArabic ? "شبكات واتصالات" : "Networking"}</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "رابط GitHub البرمجي" : "GitHub Repository URL"}</label>
+                      <input
+                        type="url"
+                        value={projGithub}
+                        onChange={(e) => setProjGithub(e.target.value)}
+                        placeholder="https://github.com/..."
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none text-right"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "سنة التخرج والاعتماد" : "Year"}</label>
+                      <input
+                        type="number"
+                        value={projYear}
+                        onChange={(e) => setProjYear(Number(e.target.value))}
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none text-right"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "الملخص التنفيذي للمشروع" : "Project Abstract"}</label>
+                    <textarea
+                      value={projAbstract}
+                      onChange={(e) => setProjAbstract(e.target.value)}
+                      placeholder={isArabic ? "اكتب ملخص الفكرة والتقنيات المستخدمة هنا..." : "Type project abstract description here..."}
+                      rows={2}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none text-right"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-start mt-4 pt-4 border-t border-slate-100">
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm cursor-pointer"
+                  >
+                    {isArabic ? "إدراج المشروع المكتمل" : "Publish Completed Project"}
+                  </button>
+                </div>
+              </form>
+
+              {/* Form 2: Add Incomplete Project Plan */}
+              <form onSubmit={handleAdminAddIncompleteProject} className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-4 text-right flex flex-col justify-between">
+                <div className="space-y-4">
+                  <h4 className="font-bold text-emerald-800 text-xs">
+                    {isArabic ? "📝 إدراج مخطط/مسودة مشروع تخرج قيد التنفيذ (للطلاب)" : "📝 Add Incomplete Project Draft Plan"}
+                  </h4>
+
+                  {incSuccess && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-xs font-bold">
+                      {isArabic ? "✅ تم إضافة خطة المسودة بنجاح للمكتبة الرقمية!" : "✅ Incomplete project blueprint added successfully!"}
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "عنوان المخطط المقترح" : "Draft Proposed Title"}</label>
+                    <input
+                      type="text"
+                      required
+                      value={incTitle}
+                      onChange={(e) => setIncTitle(e.target.value)}
+                      placeholder={isArabic ? "مثال: تطوير تطبيق رعاية ذكي للكلية" : "e.g. Smart campus fitness app"}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "الطلاب الباحثين" : "Researching Students"}</label>
+                    <input
+                      type="text"
+                      required
+                      value={incStudents}
+                      onChange={(e) => setIncStudents(e.target.value)}
+                      placeholder={isArabic ? "أسماء فريق البحث" : "e.g. Alice, Bob"}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-gray-500 font-semibold block">{isArabic ? "تفاصيل وخطوات البحث المعلقة" : "Incomplete details / pending research steps"}</label>
+                    <textarea
+                      value={incDesc}
+                      onChange={(e) => setIncDesc(e.target.value)}
+                      placeholder={isArabic ? "اكتب أهداف البحث والنواقص الحالية..." : "Type draft milestones and remaining objectives..."}
+                      rows={4}
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none text-right"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-start mt-4 pt-4 border-t border-slate-100">
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm cursor-pointer"
+                  >
+                    {isArabic ? "إدراج الخطة المعلقة" : "Publish Draft Plan"}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* List 1: Completed Projects Audit & Delete */}
+            <div className="space-y-3 text-right pt-6 border-t border-gray-100">
+              <h4 className="font-bold text-gray-800 text-xs">
+                {isArabic ? "🏆 قائمة جرد وحذف مشاريع التخرج المعتمدة بالكلية" : "🏆 Authorized Graduation Projects Audit & Removal List"}
+              </h4>
+              <div className="overflow-x-auto border border-gray-100 rounded-2xl">
+                <table className="w-full text-xs text-right border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-500 border-b border-gray-100">
+                      <th className="p-3 font-semibold">{isArabic ? "فريق العمل والطلاب" : "Team / Students"}</th>
+                      <th className="p-3 font-semibold">{isArabic ? "المشرف" : "Supervisor"}</th>
+                      <th className="p-3 font-semibold">{isArabic ? "التصنيف" : "Category"}</th>
+                      <th className="p-3 font-semibold">{isArabic ? "المشروع" : "Project Title"}</th>
+                      <th className="p-3 font-semibold text-center">{isArabic ? "إجراء" : "Action"}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {completedProjects.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-6 text-gray-400">
+                          {isArabic ? "لا توجد مشاريع مضافة حالياً." : "No projects cataloged."}
+                        </td>
+                      </tr>
+                    ) : (
+                      completedProjects.map((p) => (
+                        <tr key={p.id} className="hover:bg-slate-50 transition-colors border-b border-gray-100">
+                          <td className="p-3 text-gray-600 max-w-xs truncate">{p.students.join(", ")}</td>
+                          <td className="p-3 text-gray-600">{p.advisor}</td>
+                          <td className="p-3 text-gray-500 font-mono text-[10px]">{p.category}</td>
+                          <td className="p-3 font-semibold text-gray-800">{p.title}</td>
+                          <td className="p-3 text-center font-sans">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(isArabic ? `هل أنت متأكد من حذف وإزالة مشروع التخرج (${p.title}) نهائياً من أرشيف الكلية؟` : `Are you sure you want to delete "${p.title}"?`)) {
+                                  onDeleteGradProject(p.id);
+                                }
+                              }}
+                              className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 font-bold rounded-lg text-[10px] transition-all cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>{isArabic ? "إلغاء المشروع" : "Remove Project"}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* List 2: Incomplete Projects Audit & Delete */}
+            <div className="space-y-3 text-right pt-6 border-t border-gray-100">
+              <h4 className="font-bold text-gray-800 text-xs">
+                {isArabic ? "📝 قائمة مسودات ومخططات المشاريع المعلقة قيد التنفيذ" : "📝 Research Drafts & Blueprint Plans Audit & Removal List"}
+              </h4>
+              <div className="overflow-x-auto border border-gray-100 rounded-2xl">
+                <table className="w-full text-xs text-right border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-500 border-b border-gray-100">
+                      <th className="p-3 font-semibold">{isArabic ? "الطلاب المشاركون" : "Research Students"}</th>
+                      <th className="p-3 font-semibold">{isArabic ? "عنوان المخطط" : "Proposed Title"}</th>
+                      <th className="p-3 font-semibold text-center">{isArabic ? "إجراء" : "Action"}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {incompleteProjects.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="text-center py-6 text-gray-400">
+                          {isArabic ? "لا توجد مسودات مشاريع حالية قيد التنفيذ." : "No draft projects logged."}
+                        </td>
+                      </tr>
+                    ) : (
+                      incompleteProjects.map((ip) => (
+                        <tr key={ip.id} className="hover:bg-slate-50 transition-colors border-b border-gray-100">
+                          <td className="p-3 text-gray-600 max-w-xs truncate">{ip.students}</td>
+                          <td className="p-3 font-semibold text-gray-800">{ip.title}</td>
+                          <td className="p-3 text-center font-sans">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(isArabic ? `هل أنت متأكد من حذف مخطط البحث (${ip.title})؟` : `Are you sure you want to delete "${ip.title}"?`)) {
+                                  onDeleteIncompleteProject(ip.id);
+                                }
+                              }}
+                              className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 font-bold rounded-lg text-[10px] transition-all cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>{isArabic ? "إلغاء الخطة" : "Remove Blueprint"}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

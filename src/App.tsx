@@ -29,13 +29,16 @@ import {
   initializeSeedData, 
   getBooks, 
   addBook, 
+  deleteBook,
   getLoans, 
   createLoan, 
   returnLoan, 
   getGraduationProjects, 
   addGraduationProject, 
+  deleteGraduationProject,
   getIncompleteProjects, 
   addIncompleteProject, 
+  deleteIncompleteProject,
   getAchievements, 
   addAchievement, 
   getCompetitions, 
@@ -182,6 +185,35 @@ export default function App() {
     fetchData();
   }, []);
 
+  // Navigation permissions checker
+  const isTabAllowed = (tab: string, role: "internal_student" | "external_student" | "admin"): boolean => {
+    if (role === "admin") {
+      return tab === "admin";
+    }
+    if (role === "internal_student") {
+      return ["bookings", "projects", "registrations", "ai"].includes(tab);
+    }
+    if (role === "external_student") {
+      return tab === "catalog";
+    }
+    return false;
+  };
+
+  // Sync and protect activeTab on user session/role change
+  useEffect(() => {
+    if (currentUser) {
+      if (!isTabAllowed(activeTab, currentUser.role)) {
+        if (currentUser.role === "admin") {
+          setActiveTab("admin");
+        } else if (currentUser.role === "internal_student") {
+          setActiveTab("bookings");
+        } else if (currentUser.role === "external_student") {
+          setActiveTab("catalog");
+        }
+      }
+    }
+  }, [currentUser, activeTab]);
+
   // Background interval to check for expired reservations every 10 seconds
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -236,8 +268,23 @@ export default function App() {
     await fetchData(); // Refresh
   };
 
+  const handleDeleteGradProject = async (projectId: string) => {
+    await deleteGraduationProject(projectId);
+    await fetchData(); // Refresh
+  };
+
   const handleAddIncompleteProject = async (projData: Omit<IncompleteProject, "id">) => {
     await addIncompleteProject(projData);
+    await fetchData(); // Refresh
+  };
+
+  const handleDeleteIncompleteProject = async (projectId: string) => {
+    await deleteIncompleteProject(projectId);
+    await fetchData(); // Refresh
+  };
+
+  const handleDeleteBook = async (bookId: string) => {
+    await deleteBook(bookId);
     await fetchData(); // Refresh
   };
 
@@ -434,6 +481,8 @@ export default function App() {
         currentUser={currentUser}
         onLogout={handleLogout}
         stats={stats}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
       />
 
       {/* Target Scoped Broadcast Banner */}
@@ -466,7 +515,7 @@ export default function App() {
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-6">
         
         {/* Navigation Sidebar/Rail */}
-        <aside className="w-full md:w-64 shrink-0 flex flex-col" id="app-sidebar">
+        <aside className={`w-full md:w-64 shrink-0 flex flex-col relative ${sidebarOpen ? "z-50" : "z-10"}`} id="app-sidebar">
           
           {/* Mobile navigation toggle */}
           <div className="md:hidden flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl mb-4">
@@ -481,83 +530,97 @@ export default function App() {
             </button>
           </div>
 
-          <nav className={`bg-white border border-gray-100 rounded-2xl p-4 space-y-1.5 shadow-xs transition-all ${
-            sidebarOpen ? "block" : "hidden md:block"
+          <nav className={`bg-white border border-gray-100 rounded-2xl p-4 space-y-1.5 shadow-xl transition-all ${
+            sidebarOpen 
+              ? "block absolute left-0 right-0 top-[60px] z-50 md:relative md:top-0 md:shadow-xs" 
+              : "hidden md:block"
           }`}>
             
-            <button
-              onClick={() => { setActiveTab("dashboard"); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "dashboard"
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.01]"
-                  : "text-gray-600 hover:bg-slate-50 hover:text-blue-600"
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              <span>{isArabic ? "لوحة التميز والخرائط" : "Excellence & Map"}</span>
-            </button>
+            {isTabAllowed("dashboard", currentUser.role) && (
+              <button
+                onClick={() => { setActiveTab("dashboard"); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "dashboard"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.01]"
+                    : "text-gray-600 hover:bg-slate-50 hover:text-blue-600"
+                }`}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span>{isArabic ? "لوحة التميز والخرائط" : "Excellence & Map"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab("catalog"); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "catalog"
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.01]"
-                  : "text-gray-600 hover:bg-slate-50 hover:text-blue-600"
-              }`}
-            >
-              <BookMarked className="w-4 h-4" />
-              <span>{isArabic ? "المكتبة وفهرس المراجع" : "Library Book Catalog"}</span>
-            </button>
+            {isTabAllowed("catalog", currentUser.role) && (
+              <button
+                onClick={() => { setActiveTab("catalog"); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "catalog"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.01]"
+                    : "text-gray-600 hover:bg-slate-50 hover:text-blue-600"
+                }`}
+              >
+                <BookMarked className="w-4 h-4" />
+                <span>{isArabic ? "المكتبة وفهرس المراجع" : "Library Book Catalog"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab("bookings"); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "bookings"
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.01]"
-                  : "text-gray-600 hover:bg-slate-50 hover:text-blue-600"
-              }`}
-            >
-              <Calendar className="w-4 h-4" />
-              <span>{isArabic ? "حجز القاعات والأجهزة" : "Smart Space Booking"}</span>
-            </button>
+            {isTabAllowed("bookings", currentUser.role) && (
+              <button
+                onClick={() => { setActiveTab("bookings"); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "bookings"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.01]"
+                    : "text-gray-600 hover:bg-slate-50 hover:text-blue-600"
+                }`}
+              >
+                <Calendar className="w-4 h-4" />
+                <span>{isArabic ? "حجز القاعات والأجهزة" : "Smart Space Booking"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab("projects"); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "projects"
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.01]"
-                  : "text-gray-600 hover:bg-slate-50 hover:text-blue-600"
-              }`}
-            >
-              <FolderGit className="w-4 h-4" />
-              <span>{isArabic ? "مشاريع التخرج والبحوث" : "Graduation Projects"}</span>
-            </button>
+            {isTabAllowed("projects", currentUser.role) && (
+              <button
+                onClick={() => { setActiveTab("projects"); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "projects"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.01]"
+                    : "text-gray-600 hover:bg-slate-50 hover:text-blue-600"
+                }`}
+              >
+                <FolderGit className="w-4 h-4" />
+                <span>{isArabic ? "مشاريع التخرج والبحوث" : "Graduation Projects"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab("registrations"); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "registrations"
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.01]"
-                  : "text-gray-600 hover:bg-slate-50 hover:text-blue-600"
-              }`}
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>{isArabic ? "تسجيل العضوية والأنشطة" : "Activity Registration"}</span>
-            </button>
+            {isTabAllowed("registrations", currentUser.role) && (
+              <button
+                onClick={() => { setActiveTab("registrations"); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "registrations"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.01]"
+                    : "text-gray-600 hover:bg-slate-50 hover:text-blue-600"
+                }`}
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>{isArabic ? "تسجيل العضوية والأنشطة" : "Activity Registration"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab("ai"); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer border-t border-slate-100 pt-3.5 ${
-                activeTab === "ai"
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100 scale-[1.01]"
-                  : "text-indigo-600 hover:bg-indigo-50/50"
-              }`}
-            >
-              <Bot className="w-4 h-4 animate-bounce" />
-              <span>{isArabic ? "محرك البحث والذكاء الاصطناعي" : "AI Search & Assistant"}</span>
-            </button>
+            {isTabAllowed("ai", currentUser.role) && (
+              <button
+                onClick={() => { setActiveTab("ai"); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer border-t border-slate-100 pt-3.5 ${
+                  activeTab === "ai"
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100 scale-[1.01]"
+                    : "text-indigo-600 hover:bg-indigo-50/50"
+                }`}
+              >
+                <Bot className="w-4 h-4 animate-bounce" />
+                <span>{isArabic ? "محرك البحث والذكاء الاصطناعي" : "AI Search & Assistant"}</span>
+              </button>
+            )}
 
-            {currentUser.role === "admin" && (
+            {isTabAllowed("admin", currentUser.role) && (
               <button
                 onClick={() => { setActiveTab("admin"); setSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer border-t border-rose-100 pt-3.5 ${
@@ -571,92 +634,95 @@ export default function App() {
               </button>
             )}
 
-          </nav>
+            {/* ROLE SWITCHER CONTROLS */}
+            <div className="mt-4 pt-4 border-t border-slate-100 text-right space-y-3">
+              <h4 className="text-xs font-bold text-gray-800 flex items-center gap-2 justify-end">
+                <span>{isArabic ? "بوابة محاكاة الأدوار الأكاديمية" : "Academic Role Simulator"}</span>
+                <ShieldCheck className="w-4 h-4 text-indigo-600" />
+              </h4>
+              <p className="text-[10px] text-gray-500 leading-relaxed">
+                {isArabic 
+                  ? "اختر هويتك لتجربة تباين الصلاحيات والشاشات، طوابير الطباعة الذاتية، الإشعارات الموجهة، والدردشة مع الإدارة في الوقت الفعلي."
+                  : "Switch identities to test targeted broadcasts, printing authorization rules, and live helpdesk tickets."}
+              </p>
 
-          {/* ROLE SWITCHER CONTROLS */}
-          <div className="mt-4 bg-white border border-gray-100 rounded-2xl p-4 shadow-sm text-right space-y-3">
-            <h4 className="text-xs font-bold text-gray-800 flex items-center gap-2 justify-end">
-              <span>{isArabic ? "بوابة محاكاة الأدوار الأكاديمية" : "Academic Role Simulator"}</span>
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
-            </h4>
-            <p className="text-[10px] text-gray-500 leading-relaxed">
-              {isArabic 
-                ? "اختر هويتك لتجربة تباين الصلاحيات والشاشات، طوابير الطباعة الذاتية، الإشعارات الموجهة، والدردشة مع الإدارة في الوقت الفعلي."
-                : "Switch identities to test targeted broadcasts, printing authorization rules, and live helpdesk tickets."}
-            </p>
+              <div className="space-y-1.5">
+                <button
+                  onClick={() => {
+                    const newUser = {
+                      name: "يزيد المطيري",
+                      id: "442001928",
+                      email: "y.mutairi@university.edu.sa",
+                      role: "internal_student" as const,
+                      collegeName: "كليات الحاسبات والمعلومات",
+                      department: "هندسة الحاسب"
+                    };
+                    setCurrentUser(newUser);
+                    localStorage.setItem("smart_lib_session_v1", JSON.stringify(newUser));
+                    setActiveTab("bookings");
+                    setSidebarOpen(false);
+                  }}
+                  className={`w-full py-2 px-3 rounded-xl text-[11px] font-semibold transition-all flex items-center justify-between cursor-pointer ${
+                    currentUser.role === "internal_student"
+                      ? "bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold"
+                      : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
+                  }`}
+                >
+                  <span className="text-[10px] opacity-60 font-mono">ID: 44200...</span>
+                  <span className="font-bold">{isArabic ? "طالب الحاسب (يزيد)" : "CS Student (Yazeed)"}</span>
+                </button>
 
-            <div className="space-y-1.5">
-              <button
-                onClick={() => {
-                  const newUser = {
-                    name: "يزيد المطيري",
-                    id: "442001928",
-                    email: "y.mutairi@university.edu.sa",
-                    role: "internal_student" as const,
-                    collegeName: "كليات الحاسبات والمعلومات",
-                    department: "هندسة الحاسب"
-                  };
-                  setCurrentUser(newUser);
-                  localStorage.setItem("smart_lib_session_v1", JSON.stringify(newUser));
-                  if (activeTab === "admin") setActiveTab("dashboard");
-                }}
-                className={`w-full py-2 px-3 rounded-xl text-[11px] font-semibold transition-all flex items-center justify-between cursor-pointer ${
-                  currentUser.role === "internal_student"
-                    ? "bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold"
-                    : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
-                }`}
-              >
-                <span className="text-[10px] opacity-60 font-mono">ID: 44200...</span>
-                <span className="font-bold">{isArabic ? "طالب الحاسب (يزيد)" : "CS Student (Yazeed)"}</span>
-              </button>
+                <button
+                  onClick={() => {
+                    const newUser = {
+                      name: "سارة الحارثي",
+                      id: "442008812",
+                      email: "s.harthi@university.edu.sa",
+                      role: "external_student" as const,
+                      collegeName: "كلية العلوم والآداب",
+                      department: "الكيمياء الحيوية"
+                    };
+                    setCurrentUser(newUser);
+                    localStorage.setItem("smart_lib_session_v1", JSON.stringify(newUser));
+                    setActiveTab("catalog");
+                    setSidebarOpen(false);
+                  }}
+                  className={`w-full py-2 px-3 rounded-xl text-[11px] font-semibold transition-all flex items-center justify-between cursor-pointer ${
+                    currentUser.role === "external_student"
+                      ? "bg-amber-50 border border-amber-200 text-amber-700 font-bold"
+                      : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
+                  }`}
+                >
+                  <span className="text-[10px] opacity-60 font-mono">{isArabic ? "زائر" : "Guest"}</span>
+                  <span className="font-bold">{isArabic ? "طالب خارجي (سارة)" : "External Student (Sara)"}</span>
+                </button>
 
-              <button
-                onClick={() => {
-                  const newUser = {
-                    name: "سارة الحارثي",
-                    id: "442008812",
-                    email: "s.harthi@university.edu.sa",
-                    role: "external_student" as const,
-                    collegeName: "كلية العلوم والآداب",
-                    department: "الكيمياء الحيوية"
-                  };
-                  setCurrentUser(newUser);
-                  localStorage.setItem("smart_lib_session_v1", JSON.stringify(newUser));
-                  if (activeTab === "admin") setActiveTab("dashboard");
-                }}
-                className={`w-full py-2 px-3 rounded-xl text-[11px] font-semibold transition-all flex items-center justify-between cursor-pointer ${
-                  currentUser.role === "external_student"
-                    ? "bg-amber-50 border border-amber-200 text-amber-700 font-bold"
-                    : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
-                }`}
-              >
-                <span className="text-[10px] opacity-60 font-mono">{isArabic ? "زائر" : "Guest"}</span>
-                <span className="font-bold">{isArabic ? "طالب خارجي (سارة)" : "External Student (Sara)"}</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  const newUser = {
-                    name: "مشرف النظام الموحد",
-                    id: "admin-999",
-                    email: "admin@college.edu.sa",
-                    role: "admin" as const
-                  };
-                  setCurrentUser(newUser);
-                  localStorage.setItem("smart_lib_session_v1", JSON.stringify(newUser));
-                  setActiveTab("admin"); // Auto-route to admin console!
-                }}
-                className={`w-full py-2 px-3 rounded-xl text-[11px] font-semibold transition-all flex items-center justify-between cursor-pointer ${
-                  currentUser.role === "admin"
-                    ? "bg-rose-50 border border-rose-200 text-rose-700 font-bold"
-                    : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
-                }`}
-              >
-                <span className="text-[10px] opacity-60 font-mono">{isArabic ? "مسؤول" : "Root Admin"}</span>
-                <span className="font-bold">{isArabic ? "مشرف البوابة (الأدمن)" : "System Admin"}</span>
-              </button>
+                <button
+                  onClick={() => {
+                    const newUser = {
+                      name: "مشرف النظام الموحد",
+                      id: "admin-999",
+                      email: "admin@college.edu.sa",
+                      role: "admin" as const
+                    };
+                    setCurrentUser(newUser);
+                    localStorage.setItem("smart_lib_session_v1", JSON.stringify(newUser));
+                    setActiveTab("admin"); // Auto-route to admin console!
+                    setSidebarOpen(false);
+                  }}
+                  className={`w-full py-2 px-3 rounded-xl text-[11px] font-semibold transition-all flex items-center justify-between cursor-pointer ${
+                    currentUser.role === "admin"
+                      ? "bg-rose-50 border border-rose-200 text-rose-700 font-bold"
+                      : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
+                  }`}
+                >
+                  <span className="text-[10px] opacity-60 font-mono">{isArabic ? "مسؤول" : "Root Admin"}</span>
+                  <span className="font-bold">{isArabic ? "مشرف البوابة (الأدمن)" : "System Admin"}</span>
+                </button>
+              </div>
             </div>
-          </div>
+
+          </nav>
 
         </aside>
 
@@ -675,6 +741,36 @@ export default function App() {
               <p className="text-xs text-gray-400">
                 {isArabic ? "تحميل الفهارس، الجداول، ومصادر الذكاء الاصطناعي" : "Loading indices, timetables, and Gemini intelligence endpoints"}
               </p>
+            </div>
+          ) : !isTabAllowed(activeTab, currentUser.role) ? (
+            <div className="bg-white border border-gray-100 rounded-2xl p-12 text-center space-y-6 shadow-sm flex flex-col items-center justify-center min-h-[400px]">
+              <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center text-red-500 animate-bounce">
+                <Shield className="w-8 h-8" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-bold text-gray-800 text-lg">
+                  {isArabic ? "وصول غير مصرح به" : "Unauthorized Access"}
+                </h3>
+                <p className="text-sm text-gray-500 max-w-md">
+                  {isArabic 
+                    ? "هذه الصفحة غير مصرح لك بدخولها طبقاً لسياسة صلاحيات المستخدم الحالية." 
+                    : "This page is restricted according to your current user permission policy."}
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  if (currentUser.role === "admin") {
+                    setActiveTab("admin");
+                  } else if (currentUser.role === "internal_student") {
+                    setActiveTab("bookings");
+                  } else {
+                    setActiveTab("catalog");
+                  }
+                }}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-md cursor-pointer"
+              >
+                {isArabic ? "الرجوع إلى صفحتك الرئيسية" : "Return to Your Authorized Dashboard"}
+              </button>
             </div>
           ) : (
             <>
@@ -700,6 +796,7 @@ export default function App() {
                   onAddBook={handleAddBook}
                   onBorrowBook={handleBorrowBook}
                   onReturnBook={handleReturnBook}
+                  currentUserRole={currentUser.role}
                 />
               )}
 
@@ -765,6 +862,15 @@ export default function App() {
                   onReleaseSpace={handleReleaseSpace}
                   onUpdateLibraryStatus={handleUpdateLibraryStatus}
                   onClearProject={handleClearProject}
+                  books={books}
+                  onAddBook={handleAddBook}
+                  onDeleteBook={handleDeleteBook}
+                  completedProjects={graduationProjects}
+                  incompleteProjects={incompleteProjects}
+                  onAddGradProject={handleAddGradProject}
+                  onAddIncompleteProject={handleAddIncompleteProject}
+                  onDeleteGradProject={handleDeleteGradProject}
+                  onDeleteIncompleteProject={handleDeleteIncompleteProject}
                 />
               )}
             </>

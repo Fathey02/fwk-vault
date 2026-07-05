@@ -355,6 +355,14 @@ export async function addBook(book: Omit<Book, "id">): Promise<string> {
   }
 }
 
+export async function deleteBook(bookId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, "books", bookId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `books/${bookId}`);
+  }
+}
+
 export async function updateBookAvailability(bookId: string, change: number): Promise<void> {
   try {
     const docRef = doc(db, "books", bookId);
@@ -438,6 +446,14 @@ export async function addGraduationProject(project: Omit<GraduationProject, "id"
   }
 }
 
+export async function deleteGraduationProject(projectId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, "projects", projectId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `projects/${projectId}`);
+  }
+}
+
 // ----------------- INCOMPLETE PROJECTS (STUDENTS COVERS) -----------------
 export async function getIncompleteProjects(): Promise<IncompleteProject[]> {
   try {
@@ -460,6 +476,14 @@ export async function addIncompleteProject(project: Omit<IncompleteProject, "id"
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, "incomplete_projects");
     return "";
+  }
+}
+
+export async function deleteIncompleteProject(projectId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, "incomplete_projects", projectId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `incomplete_projects/${projectId}`);
   }
 }
 

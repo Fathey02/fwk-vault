@@ -1,4 +1,4 @@
-import { BookOpen, Users, BookmarkCheck, Calendar, Activity, LogOut, ShieldAlert } from "lucide-react";
+import { BookOpen, Users, BookmarkCheck, Calendar, Activity, LogOut, ShieldAlert, Menu, X } from "lucide-react";
 
 interface HeaderProps {
   isArabic: boolean;
@@ -21,6 +21,8 @@ interface HeaderProps {
     bookedSeats: number;
     totalStudents: number;
   };
+  sidebarOpen: boolean;
+  setSidebarOpen: (val: boolean) => void;
 }
 
 export default function Header({ 
@@ -31,7 +33,9 @@ export default function Header({
   totalSeats,
   currentUser,
   onLogout,
-  stats 
+  stats,
+  sidebarOpen,
+  setSidebarOpen
 }: HeaderProps) {
   
   // Get congestion status and color
@@ -130,6 +134,18 @@ export default function Header({
               {isArabic ? "English 🇬🇧" : "العربية 🇸🇦"}
             </button>
 
+            {/* Mobile Menu Hamburger Toggle */}
+            {currentUser && (
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="md:hidden p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg border border-blue-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 text-xs font-bold"
+                title={isArabic ? "قائمة التصفح" : "Toggle Menu"}
+              >
+                {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                <span>{isArabic ? "القائمة" : "Menu"}</span>
+              </button>
+            )}
+
             {/* Logged in user profile & Logout */}
             {currentUser && (
               <div className="flex items-center gap-2 border-l sm:border-l-0 sm:border-r border-gray-200 pl-2 sm:pl-0 sm:pr-2 sm:ml-1" id="header-user-profile">
@@ -158,7 +174,7 @@ export default function Header({
         </div>
 
         {/* Dashboard Mini-Stats Ribbon */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-100">
+        <div className="hidden md:grid grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-100">
           
           <div className="p-3 bg-slate-50/50 rounded-xl border border-gray-100/70 flex items-center gap-3">
             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">

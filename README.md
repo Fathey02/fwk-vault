@@ -84,6 +84,38 @@ The application interfaces directly with **Firebase Firestore** using the follow
 * Node.js (v18 or higher)
 * NPM
 
+### 1. Clone & Install Dependencies
+```bash
+# Clone the repository
+git clone <your-repository-url>
+cd fwk-library
+
+# Install base dependencies
+npm install
+```
+
+### 2. Configure Environment Variables
+Create a `.env` file in the root folder based on `.env.example`:
+```env
+# Gemini API Key (Required for server-side smart academic helper)
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Firebase Configuration (Automatically configured by platform)
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+```
+
+### 3. Run the Development Server
+```bash
+# Start backend Express server + Vite Dev server
+npm run dev
+```
+The application will boot and be accessible at `http://localhost:3000`.
+
 ### 4. Build for Production
 To bundle the frontend assets and compile the backend into a CJS file:
 ```bash
