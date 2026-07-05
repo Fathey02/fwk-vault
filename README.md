@@ -41,23 +41,6 @@
 
 ## 💻 Tech Stack & Architecture
 
-### Frontend
-* **Core Framework:** React 19 + TypeScript (Fast, modular, strongly-typed components)
-* **Build System:** Vite 6 (Zero HMR flickering during cold-starts)
-* **Styles:** Tailwind CSS v4 (Pure utility classes, modern layout mechanics)
-* **Animation Engine:** `motion/react` (Smooth slide transitions and interactive feedback)
-* **Data Visualization:** `recharts` (Congestion analysis and resource statistics)
-* **Scanning:** `html5-qrcode` (Browser-based QR code camera parser)
-
-### Backend
-* **Runtime:** Node.js (with `tsx` execution in dev mode)
-* **Server Framework:** Express (Proxying requests safely, serving static SPA bundles)
-* **Compiler:** `esbuild` (Compiling the Express server into `dist/server.cjs` for performance)
-
-### Databases & Cloud
-* **Persistent Database:** Firebase Firestore (Durable real-time document storage)
-* **Authentication:** Firebase Auth (Secure student logins and credentials)
-
 ---
 
 ## 🗄️ Database Schema Blueprint
@@ -92,21 +75,6 @@ cd fwk-library
 
 # Install base dependencies
 npm install
-```
-
-### 2. Configure Environment Variables
-Create a `.env` file in the root folder based on `.env.example`:
-```env
-# Gemini API Key (Required for server-side smart academic helper)
-GEMINI_API_KEY=your_gemini_api_key_here
-
-# Firebase Configuration (Automatically configured by platform)
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_STORAGE_BUCKET=
-VITE_FIREBASE_MESSAGING_SENDER_ID=
-VITE_FIREBASE_APP_ID=
 ```
 
 ### 3. Run the Development Server
