@@ -454,21 +454,23 @@ export default function GraduationProjects({
         </div>
 
         {/* Dynamic Buttons depending on view */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setShowIncompleteModal(true)}
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
-          >
-            {isArabic ? "رفع مشروع قيد الإنجاز (غلاف)" : "Upload Active Project (Cover)"}
-          </button>
-          
-          <button
-            onClick={() => setShowGradModal(true)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
-          >
-            {isArabic ? "توثيق مشروع تخرج مكتمل" : "Document Completed Project"}
-          </button>
-        </div>
+        {currentUserRole === "admin" && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setShowIncompleteModal(true)}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
+            >
+              {isArabic ? "رفع مشروع قيد الإنجاز (غلاف)" : "Upload Active Project (Cover)"}
+            </button>
+            
+            <button
+              onClick={() => setShowGradModal(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
+            >
+              {isArabic ? "توثيق مشروع تخرج مكتمل" : "Document Completed Project"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}

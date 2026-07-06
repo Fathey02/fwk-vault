@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 
 // Firebase configuration from firebase-applet-config.json
 const firebaseConfig = {
@@ -14,6 +14,8 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with the custom database ID provided by AI Studio
+// Initialize Firestore with the custom database ID provided by AI Studio and enable long-polling
 const dbId = "ai-studio-csinformationlib-40b823c2-b4ae-48a7-baaf-99a1fb3e954c";
-export const db = getFirestore(app, dbId);
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+}, dbId);

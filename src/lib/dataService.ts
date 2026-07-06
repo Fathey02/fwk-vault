@@ -750,27 +750,40 @@ export async function updateStudentLibraryStatus(studentRegId: string, inLibrary
 
 export interface LibraryConfig {
   totalSeats: number;
+  congestion?: number;
+  congestionMode?: "auto" | "manual";
 }
 
 export async function getLibraryConfig(): Promise<LibraryConfig> {
   try {
     const docSnap = await getDocs(collection(db, "settings"));
     let totalSeats = 5;
+    let congestion = 38;
+    let congestionMode: "auto" | "manual" = "auto";
     docSnap.forEach((d) => {
       if (d.id === "library_config") {
         totalSeats = d.data().totalSeats ?? 5;
+        congestion = d.data().congestion ?? 38;
+        congestionMode = d.data().congestionMode ?? "auto";
       }
     });
-    return { totalSeats };
+    return { totalSeats, congestion, congestionMode };
   } catch (error) {
-    return { totalSeats: 5 };
+    return { totalSeats: 5, congestion: 38, congestionMode: "auto" };
   }
 }
 
-export async function updateLibraryConfig(totalSeats: number): Promise<void> {
+export async function updateLibraryConfig(totalSeats: number, congestion?: number, congestionMode?: "auto" | "manual"): Promise<void> {
   try {
     const docRef = doc(db, "settings", "library_config");
-    await setDoc(docRef, { totalSeats }, { merge: true });
+    const updateData: any = { totalSeats };
+    if (congestion !== undefined) {
+      updateData.congestion = congestion;
+    }
+    if (congestionMode !== undefined) {
+      updateData.congestionMode = congestionMode;
+    }
+    await setDoc(docRef, updateData, { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, "settings/library_config");
   }

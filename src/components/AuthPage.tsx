@@ -47,7 +47,7 @@ export default function AuthPage({
   const [regError, setRegError] = useState("");
   const [regSuccess, setRegSuccess] = useState(false);
 
-  const handleLogin = (e: FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setLoginError("");
 
@@ -70,9 +70,50 @@ export default function AuthPage({
     }
 
     // Search inside the registered students
-    const matched = registrations.find(
+    let matched = registrations.find(
       r => r.studentId === query || r.email.toLowerCase() === query
     );
+
+    // If not found, check if it matches Yazeed or Sara to register them on-the-fly
+    if (!matched) {
+      if (query === "442001928" || query === "y.mutairi@university.edu.sa") {
+        try {
+          const studentData = {
+            studentName: isArabic ? "يزيد المطيري" : "Yazeed Al-Mutairi",
+            studentId: "442001928",
+            email: "y.mutairi@university.edu.sa",
+            phone: "0501234567",
+            department: isArabic ? "هندسة الحاسب" : "Computer Engineering",
+            activities: [isArabic ? "خدمات الاستعارة العامة" : "General Loan Services", isArabic ? "حجز قاعات النقاش" : "Discussion Space Booking"],
+            registrationDate: new Date().toISOString().split("T")[0],
+            qrCodeData: "STUDENT-ID-442001928-1234",
+            inLibrary: false,
+            lastAccessTime: "N/A"
+          };
+          matched = await onRegister(studentData);
+        } catch (err) {
+          console.error("Error auto-registering user Yazeed:", err);
+        }
+      } else if (query === "442008812" || query === "s.harthi@university.edu.sa") {
+        try {
+          const studentData = {
+            studentName: isArabic ? "سارة الحارثي" : "Sara Al-Harthi",
+            studentId: "442008812",
+            email: "s.harthi@university.edu.sa",
+            phone: "0507654321",
+            department: "External",
+            activities: [isArabic ? "خدمات الاستعارة العامة" : "General Loan Services"],
+            registrationDate: new Date().toISOString().split("T")[0],
+            qrCodeData: "STUDENT-ID-442008812-5678",
+            inLibrary: false,
+            lastAccessTime: "N/A"
+          };
+          matched = await onRegister(studentData);
+        } catch (err) {
+          console.error("Error auto-registering user Sara:", err);
+        }
+      }
+    }
 
     if (matched) {
       onLogin({
@@ -84,7 +125,6 @@ export default function AuthPage({
         department: matched.department
       });
     } else {
-      // Allow instant smart guest registration/login bypass if needed or show error
       setLoginError(
         isArabic 
           ? "لم يتم العثور على الحساب. يرجى إنشاء حساب جديد أولاً!" 

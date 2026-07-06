@@ -44,6 +44,7 @@ interface DashboardProps {
   onSelectSpace: (spaceId: string) => void;
   completedProjects?: GraduationProject[];
   incompleteProjects?: IncompleteProject[];
+  currentUserRole?: "internal_student" | "external_student" | "admin";
 }
 
 export default function Dashboard({
@@ -55,7 +56,8 @@ export default function Dashboard({
   onAddCompetition,
   onSelectSpace,
   completedProjects = [],
-  incompleteProjects = []
+  incompleteProjects = [],
+  currentUserRole
 }: DashboardProps) {
   
   // Forms states
@@ -306,13 +308,15 @@ export default function Dashboard({
                 : "Track college achievements, national programming competitions, academic accreditations, and explore the interactive topological map to reserve smart study labs."}
             </p>
           </div>
-          <button
-            onClick={() => setShowCertModal(true)}
-            className="flex items-center justify-center gap-2 px-5 py-3 bg-white text-indigo-700 hover:bg-indigo-50 font-semibold rounded-xl transition-all shadow-md active:scale-95 shrink-0 cursor-pointer text-sm"
-          >
-            <Upload className="w-4 h-4" />
-            {isArabic ? "توثيق ورفع شهادة جديدة" : "Upload & Document Certificate"}
-          </button>
+          {currentUserRole === "admin" && (
+            <button
+              onClick={() => setShowCertModal(true)}
+              className="flex items-center justify-center gap-2 px-5 py-3 bg-white text-indigo-700 hover:bg-indigo-50 font-semibold rounded-xl transition-all shadow-md active:scale-95 shrink-0 cursor-pointer text-sm"
+            >
+              <Upload className="w-4 h-4" />
+              {isArabic ? "توثيق ورفع شهادة جديدة" : "Upload & Document Certificate"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -628,289 +632,7 @@ export default function Dashboard({
 
       </div>
 
-      {/* Student Projects Status Distribution Chart (Recharts) */}
-      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-100 shadow-sm animate-fade-in" id="project-distribution-section">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-gray-100 pb-4">
-          <div className="flex items-center gap-2.5">
-            <BarChart3 className="w-5 h-5 text-indigo-600" />
-            <div>
-              <h3 className="font-bold text-gray-800 text-lg">
-                {isArabic ? "تحليلات وإحصائيات المشاريع" : "Project Analytics & Trends"}
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {isArabic 
-                  ? "تحليل شامل لتوزيع المشاريع الحالية ومعدلات الإضافة الشهرية وتنزيل التقارير" 
-                  : "Comprehensive analysis of project distribution, monthly additions, and data export"}
-              </p>
-            </div>
-          </div>
 
-          {/* Export Data Button */}
-          <button
-            id="export-data-btn"
-            onClick={handleExportData}
-            className="flex items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 text-slate-700 px-4 py-2.5 rounded-xl border border-slate-200 transition-all text-xs font-bold shadow-xs cursor-pointer self-start sm:self-auto"
-          >
-            <Download className="w-4 h-4 text-slate-500 hover:text-indigo-500 transition-colors" />
-            <span>{isArabic ? "تصدير البيانات" : "Export Data"}</span>
-          </button>
-        </div>
-
-        {(() => {
-          const completedCount = completedProjects?.length || 3;
-          const rawIncomplete = incompleteProjects?.length || 0;
-
-          // Divide incomplete into In-Progress and Under-Review
-          const inProgressCount = rawIncomplete > 0 ? Math.ceil(rawIncomplete * 0.7) : 2;
-          const underReviewCount = rawIncomplete > 0 ? Math.floor(rawIncomplete * 0.3) : 1;
-          const totalProjects = completedCount + inProgressCount + underReviewCount;
-
-          const chartData = [
-            {
-              name: isArabic ? "مكتملة" : "Completed",
-              count: completedCount,
-              color: "#10b981", // Emerald
-            },
-            {
-              name: isArabic ? "قيد التنفيذ" : "In-Progress",
-              count: inProgressCount,
-              color: "#4f46e5", // Indigo
-            },
-            {
-              name: isArabic ? "قيد المراجعة" : "Under-Review",
-              count: underReviewCount,
-              color: "#f97316", // Orange
-            },
-          ];
-
-          // Generate the list of last 12 months starting from July 2025 back to June 2026
-          const monthNamesEn = ["Jul 25", "Aug 25", "Sep 25", "Oct 25", "Nov 25", "Dec 25", "Jan 26", "Feb 26", "Mar 26", "Apr 26", "May 26", "Jun 26"];
-          const monthNamesAr = ["يوليو 25", "أغسطس 25", "سبتمبر 25", "أكتوبر 25", "نوفمبر 25", "ديسمبر 25", "يناير 26", "فبراير 26", "مارس 26", "أبريل 26", "مايو 26", "يونيو 26"];
-
-          const monthlyTrendData = monthNamesEn.map((mEn, idx) => {
-            const mAr = monthNamesAr[idx];
-            let count = 0;
-
-            // 1. Incomplete projects matching month
-            incompleteProjects.forEach(p => {
-              if (p.uploadedAt) {
-                try {
-                  const pDate = new Date(p.uploadedAt);
-                  const pYear = pDate.getFullYear();
-                  const pMonth = pDate.getMonth(); // 0-indexed
-                  
-                  if (idx < 6) {
-                    const targetMonthIndex = idx + 6; // 6 is Jul, 7 Aug, 8 Sep, etc.
-                    if (pYear === 2025 && pMonth === targetMonthIndex) {
-                      count++;
-                    }
-                  } else {
-                    const targetMonthIndex = idx - 6; // 0 is Jan, 1 Feb, 2 Mar, etc.
-                    if (pYear === 2026 && pMonth === targetMonthIndex) {
-                      count++;
-                    }
-                  }
-                } catch (e) {
-                  // ignore
-                }
-              }
-            });
-
-            // 2. Graduation projects matching graduation year
-            completedProjects.forEach(p => {
-              if (p.year === 2026) {
-                if (idx === 10 || idx === 11) {
-                  count += 0.5;
-                }
-              } else if (p.year === 2025) {
-                if (idx === 0) {
-                  count += 0.5;
-                }
-              }
-            });
-
-            const baseTrends = [1, 2, 0, 1, 3, 2, 1, 2, 4, 3, 5, 4];
-            const finalCount = count > 0 ? Math.ceil(count) : baseTrends[idx];
-
-            return {
-              month: isArabic ? mAr : mEn,
-              projects: finalCount
-            };
-          });
-
-          return (
-            <div className="space-y-10">
-              
-              {/* Dual Charts Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
-                {/* Chart 1: Status Distribution */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
-                    <h4 className="text-sm font-bold text-gray-700">
-                      {isArabic ? "توزيع حالة المشاريع الحالية" : "Current Project Statuses"}
-                    </h4>
-                  </div>
-                  
-                  <div className="h-[280px] w-full bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex flex-col justify-between">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={chartData}
-                        margin={{ top: 20, right: 10, left: -10, bottom: 5 }}
-                        barSize={40}
-                      >
-                        <XAxis 
-                          dataKey="name" 
-                          tickLine={false} 
-                          axisLine={false}
-                          tick={{ fill: "#64748b", fontSize: 11, fontWeight: 500 }}
-                        />
-                        <YAxis 
-                          allowDecimals={false}
-                          tickLine={false}
-                          axisLine={false}
-                          tick={{ fill: "#64748b", fontSize: 11 }}
-                        />
-                        <Tooltip
-                          cursor={{ fill: '#f8fafc' }}
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              const data = payload[0].payload;
-                              const count = data.count;
-                              const percentage = totalProjects > 0 ? ((count / totalProjects) * 100).toFixed(1) : "0";
-                              return (
-                                <div className="bg-slate-800 text-slate-100 p-3 rounded-xl shadow-xl border border-slate-700 text-xs">
-                                  <p className="font-bold text-slate-300 mb-1">{data.name}</p>
-                                  <div className="space-y-1 mt-1.5">
-                                    <p className="font-medium text-white flex justify-between gap-4">
-                                      <span>{isArabic ? "العدد الدقيق:" : "Exact Count:"}</span>
-                                      <span className="text-indigo-300 font-mono font-bold text-sm">{count}</span>
-                                    </p>
-                                    <p className="font-medium text-white flex justify-between gap-4">
-                                      <span>{isArabic ? "النسبة:" : "Percentage:"}</span>
-                                      <span className="text-emerald-300 font-mono font-bold text-sm">{percentage}%</span>
-                                    </p>
-                                  </div>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                          {chartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Chart 2: Project Additions Trend */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-emerald-500 animate-bounce" />
-                    <h4 className="text-sm font-bold text-gray-700">
-                      {isArabic ? "معدل إضافة المشاريع شهرياً (آخر سنة)" : "Monthly New Project Additions (Last Year)"}
-                    </h4>
-                  </div>
-
-                  <div className="h-[280px] w-full bg-slate-50/50 p-4 rounded-xl border border-slate-100 flex flex-col justify-between">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={monthlyTrendData}
-                        margin={{ top: 20, right: 20, left: -15, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis 
-                          dataKey="month" 
-                          tickLine={false} 
-                          axisLine={false}
-                          tick={{ fill: "#64748b", fontSize: 10, fontWeight: 500 }}
-                        />
-                        <YAxis 
-                          allowDecimals={false}
-                          tickLine={false}
-                          axisLine={false}
-                          tick={{ fill: "#64748b", fontSize: 11 }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            background: '#1e293b',
-                            border: 'none',
-                            borderRadius: '12px',
-                            color: '#f8fafc',
-                            fontSize: '12px',
-                            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                          }}
-                          itemStyle={{ color: '#38bdf8', fontWeight: 600 }}
-                          labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="projects" 
-                          stroke="#4f46e5" 
-                          strokeWidth={3}
-                          dot={{ r: 4, fill: "#4f46e5", strokeWidth: 2, stroke: "#fff" }}
-                          activeDot={{ r: 6, strokeWidth: 0 }}
-                          name={isArabic ? "المشاريع الجديدة" : "New Projects"}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Summary Cards Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
-                <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-100 flex flex-col justify-between shadow-xs">
-                  <span className="text-xs text-gray-500 font-medium block mb-1">
-                    {isArabic ? "إجمالي المشاريع المرصودة" : "Total Tracked Projects"}
-                  </span>
-                  <span className="text-2xl font-black text-slate-800 font-mono">
-                    {totalProjects}
-                  </span>
-                </div>
-
-                {chartData.map((item, idx) => {
-                  const percentage = totalProjects > 0 ? Math.round((item.count / totalProjects) * 100) : 0;
-                  return (
-                    <div 
-                      key={idx} 
-                      className="p-4 rounded-xl border border-gray-100 hover:border-indigo-100 hover:shadow-sm transition-all flex items-center justify-between bg-white shadow-xs"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span 
-                          className="w-3 h-3 rounded-full shrink-0 animate-pulse" 
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <div>
-                          <span className="font-bold text-gray-800 text-xs block">
-                            {item.name}
-                          </span>
-                          <span className="text-[10px] text-gray-400 block mt-0.5 font-sans">
-                            {isArabic ? `معدل المساهمة: ${percentage}%` : `Contribution: ${percentage}%`}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <span className="font-bold text-slate-800 text-sm block font-mono">
-                          {item.count} {isArabic ? "مشروع" : "Projects"}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-            </div>
-          );
-        })()}
-      </div>
 
       {/* Accreditations & Academic Achievements Section */}
       <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-100 shadow-sm" id="achievements-section">
@@ -1298,22 +1020,24 @@ export default function Dashboard({
 
 
       {/* Centralized 'Quick Add' Floating Action Button */}
-      <div className={`fixed bottom-8 ${isArabic ? "left-8" : "right-8"} z-40 group`}>
-        <button
-          id="quick-add-fab"
-          onClick={() => {
-            setCertType("achievement");
-            setShowCertModal(true);
-          }}
-          className="flex items-center gap-2.5 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-4 rounded-full shadow-2xl shadow-indigo-500/40 hover:shadow-indigo-500/60 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-bold border border-white/20"
-          title={isArabic ? "إضافة سريعة لإنجاز أو مسابقة" : "Quick Add Achievement or Competition"}
-        >
-          <Plus className="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" />
-          <span className="text-sm tracking-wide font-semibold font-sans">
-            {isArabic ? "إضافة سريعة" : "Quick Add"}
-          </span>
-        </button>
-      </div>
+      {currentUserRole === "admin" && (
+        <div className={`fixed bottom-8 ${isArabic ? "left-8" : "right-8"} z-40 group`}>
+          <button
+            id="quick-add-fab"
+            onClick={() => {
+              setCertType("achievement");
+              setShowCertModal(true);
+            }}
+            className="flex items-center gap-2.5 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-4 rounded-full shadow-2xl shadow-indigo-500/40 hover:shadow-indigo-500/60 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer font-bold border border-white/20"
+            title={isArabic ? "إضافة سريعة لإنجاز أو مسابقة" : "Quick Add Achievement or Competition"}
+          >
+            <Plus className="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" />
+            <span className="text-sm tracking-wide font-semibold font-sans">
+              {isArabic ? "إضافة سريعة" : "Quick Add"}
+            </span>
+          </button>
+        </div>
+      )}
 
     </div>
   );

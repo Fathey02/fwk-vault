@@ -6,64 +6,211 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidBook(data) {
+      return data.title is string && data.title.size() <= 500 &&
+             data.author is string && data.author.size() <= 200 &&
+             data.category is string && data.category.size() <= 100 &&
+             data.subCategory is string && data.subCategory.size() <= 100 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.availableCount is int && data.availableCount >= 0 &&
+             data.totalCount is int && data.totalCount >= 0 &&
+             data.pages is int && data.pages >= 0 &&
+             data.isbn is string && data.isbn.size() <= 100;
+    }
+
+    function isValidLoan(data) {
+      return data.bookId is string && data.bookId.size() <= 128 &&
+             data.studentId is string && data.studentId.size() <= 128 &&
+             data.studentName is string && data.studentName.size() <= 200 &&
+             data.borrowDate is string && data.borrowDate.size() <= 50 &&
+             data.status is string && data.status in ["active", "returned"] &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             data.needsCheckIn is bool;
+    }
+
+    function isValidProject(data) {
+      return data.title is string && data.title.size() <= 500 &&
+             data.students is list && data.students.size() <= 10 &&
+             data.advisor is string && data.advisor.size() <= 200 &&
+             data.year is int &&
+             data.abstract is string && data.abstract.size() <= 4000 &&
+             data.category is string && data.category.size() <= 100 &&
+             data.isCompleted is bool &&
+             data.githubUrl is string && data.githubUrl.size() <= 500;
+    }
+
+    function isValidIncompleteProject(data) {
+      return data.title is string && data.title.size() <= 500 &&
+             data.studentName is string && data.studentName.size() <= 200 &&
+             data.studentId is string && data.studentId.size() <= 128 &&
+             data.advisor is string && data.advisor.size() <= 200 &&
+             data.uploadedAt is string && data.uploadedAt.size() <= 100;
+    }
+
+    function isValidAchievement(data) {
+      return data.title is string && data.title.size() <= 500 &&
+             data.date is string && data.date.size() <= 50 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.type is string && data.type.size() <= 100 &&
+             data.recipient is string && data.recipient.size() <= 200;
+    }
+
+    function isValidCompetition(data) {
+      return data.title is string && data.title.size() <= 500 &&
+             data.date is string && data.date.size() <= 50 &&
+             data.placement is string && data.placement.size() <= 200 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.teamMembers is list && data.teamMembers.size() <= 20;
+    }
+
+    function isValidSpace(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 200 &&
+             data.type is string && data.type.size() <= 100 &&
+             data.status is string && data.status in ["available", "booked"];
+    }
+
+    function isValidRegistration(data) {
+      return data.studentId is string && data.studentId.size() <= 128 &&
+             data.name is string && data.name.size() <= 200 &&
+             data.email is string && data.email.size() <= 200 &&
+             data.role is string && data.role in ["internal_student", "external_student", "admin"] &&
+             data.collegeName is string && data.collegeName.size() <= 200 &&
+             data.department is string && data.department.size() <= 200 &&
+             data.inLibrary is bool &&
+             data.accessTime is string && data.accessTime.size() <= 100;
+    }
+
+    // 10. Inquiries Collection (Library FAQ)
+    function isValidInquiry(data) {
+      return data.question is string && data.question.size() <= 1000 &&
+             data.answer is string && data.answer.size() <= 4000 &&
+             data.category is string && data.category.size() <= 100;
+    }
+
+    function isValidPrintRequest(data) {
+      return data.projectId is string && data.projectId.size() <= 128 &&
+             data.projectTitle is string && data.projectTitle.size() <= 500 &&
+             data.studentName is string && data.studentName.size() <= 200 &&
+             data.studentId is string && data.studentId.size() <= 128 &&
+             data.paperSize is string && data.paperSize in ["A4", "A3"] &&
+             data.coverType is string && data.coverType in ["hardcover", "softcover", "spiral"] &&
+             data.copies is int && data.copies >= 1 &&
+             data.status is string && data.status in ["pending", "approved", "completed", "rejected"] &&
+             data.requestedAt is string && data.requestedAt.size() <= 100 &&
+             data.extraNotes is string && data.extraNotes.size() <= 1000;
+    }
+
+    function isValidNotification(data) {
+      return data.title is string && data.title.size() <= 500 &&
+             data.content is string && data.content.size() <= 2000 &&
+             data.targetAudience is string && data.targetAudience.size() <= 200 &&
+             data.senderName is string && data.senderName.size() <= 200 &&
+             data.createdAt is string && data.createdAt.size() <= 100;
+    }
+
+    function isValidChatMessage(data) {
+      return data.studentId is string && data.studentId.size() <= 128 &&
+             data.studentName is string && data.studentName.size() <= 200 &&
+             data.message is string && data.message.size() <= 2000 &&
+             data.senderRole is string && data.senderRole in ["student", "admin"] &&
+             data.timestamp is string && data.timestamp.size() <= 100;
+    }
+
     // 2. Books Collection
     match /books/{bookId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(bookId) && isValidBook(request.resource.data);
+      allow delete: if isValidId(bookId);
     }
 
     // 3. Loans Collection
     match /loans/{loanId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(loanId) && isValidLoan(request.resource.data);
+      allow delete: if isValidId(loanId);
     }
 
     // 4. Projects Collection (Graduation Projects)
     match /projects/{projectId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(projectId) && isValidProject(request.resource.data);
+      allow delete: if isValidId(projectId);
     }
 
     // 5. Incomplete Projects Collection
     match /incomplete_projects/{projectId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(projectId) && isValidIncompleteProject(request.resource.data);
+      allow delete: if isValidId(projectId);
     }
 
     // 6. Achievements Collection
     match /achievements/{achievementId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(achievementId) && isValidAchievement(request.resource.data);
+      allow delete: if isValidId(achievementId);
     }
 
     // 7. Competitions Collection
     match /competitions/{competitionId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(competitionId) && isValidCompetition(request.resource.data);
+      allow delete: if isValidId(competitionId);
     }
 
     // 8. Spaces Collection (Interactive Library Map/Bookings)
     match /spaces/{spaceId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(spaceId) && isValidSpace(request.resource.data);
+      allow delete: if isValidId(spaceId);
     }
 
     // 9. Student Registrations Collection
     match /student_registrations/{registrationId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(registrationId) && isValidRegistration(request.resource.data);
+      allow delete: if isValidId(registrationId);
     }
 
     // 10. Inquiries Collection (Library FAQ)
     match /inquiries/{inquiryId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(inquiryId) && isValidInquiry(request.resource.data);
+      allow delete: if isValidId(inquiryId);
     }
 
     // 11. Print Requests Collection
     match /print_requests/{requestId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(requestId) && isValidPrintRequest(request.resource.data);
+      allow delete: if isValidId(requestId);
     }
 
     // 12. Broadcast Notifications Collection
     match /notifications/{notificationId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(notificationId) && isValidNotification(request.resource.data);
+      allow delete: if isValidId(notificationId);
     }
 
     // 13. Chat Messages Collection
     match /chat_messages/{messageId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isValidId(messageId) && isValidChatMessage(request.resource.data);
+      allow delete: if isValidId(messageId);
+    }
+
+    // 14. Settings Collection
+    match /settings/{settingsId} {
+      allow read: if true;
+      allow create, update: if isValidId(settingsId) && request.resource.data.totalSeats is int;
+      allow delete: if isValidId(settingsId);
     }
   }
 }

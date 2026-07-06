@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { 
   BookOpen, 
   Search, 
@@ -48,6 +48,11 @@ interface LibraryCatalogProps {
   onBorrowBook: (loan: Omit<Loan, "id">) => Promise<void>;
   onReturnBook: (loanId: string, bookId: string) => Promise<void>;
   currentUserRole?: "internal_student" | "external_student" | "admin";
+  currentUser?: {
+    name: string;
+    id: string;
+    role: "internal_student" | "external_student" | "admin";
+  } | null;
 }
 
 export default function LibraryCatalog({
@@ -57,7 +62,8 @@ export default function LibraryCatalog({
   onAddBook,
   onBorrowBook,
   onReturnBook,
-  currentUserRole
+  currentUserRole,
+  currentUser
 }: LibraryCatalogProps) {
 
   // Search and Filtering States
@@ -83,6 +89,17 @@ export default function LibraryCatalog({
   const [borrowName, setBorrowName] = useState("");
   const [borrowStudentId, setBorrowStudentId] = useState("");
   const [borrowReturnDate, setBorrowReturnDate] = useState(getLocalDateString());
+
+  // Auto-fill student info if logged in
+  useEffect(() => {
+    if (currentUser) {
+      setBorrowName(currentUser.name || "");
+      setBorrowStudentId(currentUser.id || "");
+    } else {
+      setBorrowName("");
+      setBorrowStudentId("");
+    }
+  }, [currentUser]);
 
   // Filtered Books
   const filteredBooks = books.filter(book => {

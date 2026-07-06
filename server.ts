@@ -184,6 +184,13 @@ async function setupVite() {
   });
 }
 
-setupVite().catch((err) => {
-  console.error("Error setting up server:", err);
-});
+// Check if running in a serverless environment like Vercel
+const isVercel = process.env.VERCEL === "1" || process.env.NOW_REGION !== undefined;
+
+if (!isVercel) {
+  setupVite().catch((err) => {
+    console.error("Error setting up server:", err);
+  });
+}
+
+export default app;

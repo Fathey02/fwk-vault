@@ -23,6 +23,9 @@ interface HeaderProps {
   };
   sidebarOpen: boolean;
   setSidebarOpen: (val: boolean) => void;
+  congestionMode?: "auto" | "manual";
+  setCongestionMode?: (mode: "auto" | "manual") => void;
+  studentsInLibraryCount?: number;
 }
 
 export default function Header({ 
@@ -35,34 +38,53 @@ export default function Header({
   onLogout,
   stats,
   sidebarOpen,
-  setSidebarOpen
+  setSidebarOpen,
+  congestionMode = "auto",
+  setCongestionMode,
+  studentsInLibraryCount = 0
 }: HeaderProps) {
   
   // Get congestion status and color
   const getCongestionStatus = (level: number) => {
-    if (level < 35) {
+    if (level < 20) {
       return {
-        ar: "هادئ جداً (مناسب للمطالعة الصامتة)",
-        en: "Very Quiet (Perfect for Silent Study)",
+        ar: "هادئ جداً (أجواء مثالية للمطالعة الصامتة)",
+        en: "Very Quiet (Perfect environment for silent reading)",
         color: "bg-emerald-500",
-        text: "text-emerald-500",
-        lightBg: "bg-emerald-50/50"
+        text: "text-emerald-600",
+        lightBg: "bg-emerald-50/60 border-emerald-100"
       };
-    } else if (level < 70) {
+    } else if (level < 40) {
       return {
-        ar: "متوسط الزحام (نشاط اعتيادي)",
-        en: "Moderate (Standard Activity)",
+        ar: "هادئ ومناسب (ملائم للمذاكرة والتركيز)",
+        en: "Quiet & Suitable (Ideal for studying and focus)",
+        color: "bg-teal-500",
+        text: "text-teal-600",
+        lightBg: "bg-teal-50/60 border-teal-100"
+      };
+    } else if (level < 65) {
+      return {
+        ar: "متوسط الزحام (نشاط اعتيادي وتفاعل معتدل)",
+        en: "Moderate (Standard activity & mild interaction)",
         color: "bg-amber-500",
-        text: "text-amber-500",
-        lightBg: "bg-amber-50/50"
+        text: "text-amber-600",
+        lightBg: "bg-amber-50/60 border-amber-100"
+      };
+    } else if (level < 80) {
+      return {
+        ar: "مزدحم جزئياً (نشاط مرتفع وصاخب قليلاً)",
+        en: "Partially Crowded (High activity & slightly noisy)",
+        color: "bg-orange-500",
+        text: "text-orange-600",
+        lightBg: "bg-orange-50/60 border-orange-100"
       };
     } else {
       return {
-        ar: "مزدحم (موصى بغرف النقاش)",
-        en: "Crowded (Recommended to use Discussion Rooms)",
+        ar: "مزدحم جداً (موصى بالتوجه لغرف النقاش المخصصة)",
+        en: "Very Crowded (Recommended to use dedicated discussion rooms)",
         color: "bg-rose-500",
-        text: "text-rose-500",
-        lightBg: "bg-rose-50/50"
+        text: "text-rose-600",
+        lightBg: "bg-rose-50/60 border-rose-100"
       };
     }
   };
@@ -72,7 +94,7 @@ export default function Header({
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-40 backdrop-blur-md bg-white/95" id="app-header">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           
           {/* Logo and Brand */}
           <div className="flex items-center gap-3">
@@ -93,36 +115,59 @@ export default function Header({
           </div>
 
           {/* Quick Metrics & Settings */}
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
             
             {/* Live Congestion Indicator */}
-            <div className={`flex items-center gap-3 px-3.5 py-1.5 rounded-xl border border-gray-100 ${status.lightBg}`}>
-              <div className="relative">
-                <span className={`flex h-3 w-3 rounded-full ${status.color}`}></span>
-                <span className={`animate-ping absolute top-0 left-0 h-3 w-3 rounded-full ${status.color} opacity-75`}></span>
-              </div>
-              <div className="text-xs">
-                <span className="text-gray-500 block text-[10px] uppercase tracking-wider">
-                  {isArabic ? "مستوى الزحام الحالي" : "Live Library Congestion"}
-                </span>
-                <span className={`font-semibold ${status.text}`}>
-                  {congestion}% - {isArabic ? status.ar : status.en}
-                </span>
+            <div className={`flex flex-col sm:flex-row sm:items-center gap-3 px-3.5 py-1.5 rounded-xl border ${status.lightBg}`}>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <span className={`flex h-3 w-3 rounded-full ${status.color}`}></span>
+                  <span className={`animate-ping absolute top-0 left-0 h-3 w-3 rounded-full ${status.color} opacity-75`}></span>
+                </div>
+                <div className="text-xs">
+                  <span className="text-gray-500 block text-[9px] uppercase tracking-wider font-semibold">
+                    {isArabic ? "مستوى الزحام الحالي" : "Live Library Congestion"}
+                    {congestionMode === "auto" && (
+                      <span className="text-blue-600 font-bold ml-1 bg-blue-50 px-1 rounded-sm">
+                        {isArabic ? `(تلقائي: ${studentsInLibraryCount} بالداخل)` : `(Auto: ${studentsInLibraryCount} inside)`}
+                      </span>
+                    )}
+                  </span>
+                  <span className={`font-semibold ${status.text}`}>
+                    {congestion}% - {isArabic ? status.ar : status.en}
+                  </span>
+                </div>
               </div>
               
-              {/* Congestion Control Slider for Simulation */}
-              <div className="flex items-center gap-1 border-l border-gray-200 pl-3 ml-2">
-                <input 
-                  type="range" 
-                  min="10" 
-                  max="95" 
-                  value={congestion}
-                  onChange={(e) => setCongestion(parseInt(e.target.value))}
-                  className="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" 
-                  title={isArabic ? "محاكاة مستوى زحام المكتبة" : "Simulate library congestion level"}
-                />
-                <span className="text-[10px] text-gray-400 font-mono">Sim</span>
-              </div>
+              {/* Congestion Control for Administrator ONLY */}
+              {currentUser?.role === "admin" && (
+                <div className="flex items-center gap-2 border-t sm:border-t-0 sm:border-l border-gray-200 pt-1.5 sm:pt-0 sm:pl-3 sm:ml-1 text-xs">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase">{isArabic ? "التحكم:" : "Mode:"}</span>
+                  <select
+                    value={congestionMode}
+                    onChange={(e) => setCongestionMode?.(e.target.value as "auto" | "manual")}
+                    className="text-[11px] bg-white border border-gray-200 rounded px-1.5 py-0.5 text-gray-700 cursor-pointer font-medium focus:ring-1 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="auto">{isArabic ? "نظام تلقائي" : "System Auto"}</option>
+                    <option value="manual">{isArabic ? "تعديل يدوي" : "Manual Override"}</option>
+                  </select>
+                  
+                  {congestionMode === "manual" && (
+                    <div className="flex items-center gap-1">
+                      <input 
+                        type="range" 
+                        min="10" 
+                        max="95" 
+                        value={congestion}
+                        onChange={(e) => setCongestion(parseInt(e.target.value))}
+                        className="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" 
+                        title={isArabic ? "تعديل مستوى الزحام يدوياً" : "Manually adjust library congestion level"}
+                      />
+                      <span className="text-[10px] text-gray-400 font-mono">{congestion}%</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Language Switcher */}

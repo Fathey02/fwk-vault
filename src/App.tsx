@@ -83,6 +83,7 @@ export default function App() {
   // Bilingual state
   const [isArabic, setIsArabic] = useState(true);
   const [congestion, setCongestion] = useState(38); // Simulated active live level
+  const [congestionMode, setCongestionMode] = useState<"auto" | "manual">("auto");
   
   // Navigation
   const [activeTab, setActiveTab] = useState<"dashboard" | "catalog" | "bookings" | "projects" | "registrations" | "ai" | "admin">("dashboard");
@@ -173,6 +174,12 @@ export default function App() {
       setNotifications(notifList);
       setChatMessages(chatList);
       setTotalSeats(config.totalSeats || 5);
+      if (config.congestionMode !== undefined) {
+        setCongestionMode(config.congestionMode as "auto" | "manual");
+      }
+      if (config.congestionMode === "manual" && config.congestion !== undefined) {
+        setCongestion(config.congestion);
+      }
 
     } catch (err) {
       console.error("Error loading library database:", err);
@@ -185,13 +192,29 @@ export default function App() {
     fetchData();
   }, []);
 
+  // Auto-calculate congestion if in auto mode based on students present in library
+  useEffect(() => {
+    if (congestionMode === "auto") {
+      const count = registrations.filter(r => r.inLibrary).length;
+      let calculated = 12;
+      if (count === 1) calculated = 28;
+      else if (count === 2) calculated = 45;
+      else if (count === 3) calculated = 68;
+      else if (count >= 4) calculated = 88;
+      setCongestion(calculated);
+    }
+  }, [registrations, congestionMode]);
+
   // Navigation permissions checker
   const isTabAllowed = (tab: string, role: "internal_student" | "external_student" | "admin"): boolean => {
+    if (tab === "dashboard") {
+      return role === "admin" || role === "internal_student";
+    }
     if (role === "admin") {
       return tab === "admin";
     }
     if (role === "internal_student") {
-      return ["bookings", "projects", "registrations", "ai"].includes(tab);
+      return ["catalog", "bookings", "projects", "registrations", "ai"].includes(tab);
     }
     if (role === "external_student") {
       return tab === "catalog";
@@ -461,12 +484,47 @@ export default function App() {
         onLogin={(session) => {
           localStorage.setItem("smart_lib_session_v1", JSON.stringify(session));
           setCurrentUser(session);
+          if (session.role === "admin") {
+            setActiveTab("admin");
+          } else if (session.role === "internal_student") {
+            setActiveTab("dashboard");
+          } else if (session.role === "external_student") {
+            setActiveTab("catalog");
+          }
         }}
         onRegister={handleRegisterFromAuth}
         registrations={registrations}
       />
     );
   }
+
+  const handleSetCongestionMode = async (mode: "auto" | "manual") => {
+    setCongestionMode(mode);
+    try {
+      let finalCongestion = congestion;
+      if (mode === "auto") {
+        const count = registrations.filter(r => r.inLibrary).length;
+        if (count === 0) finalCongestion = 12;
+        else if (count === 1) finalCongestion = 28;
+        else if (count === 2) finalCongestion = 45;
+        else if (count === 3) finalCongestion = 68;
+        else finalCongestion = 88;
+        setCongestion(finalCongestion);
+      }
+      await updateLibraryConfig(totalSeats, finalCongestion, mode);
+    } catch (err) {
+      console.error("Failed to save congestion mode:", err);
+    }
+  };
+
+  const handleSetCongestion = async (level: number) => {
+    setCongestion(level);
+    try {
+      await updateLibraryConfig(totalSeats, level, congestionMode);
+    } catch (err) {
+      console.error("Failed to save congestion level:", err);
+    }
+  };
 
   return (
     <div className={`min-h-screen bg-[#0f172a] text-slate-100 flex flex-col font-sans ${isArabic ? "rtl" : "ltr"}`} id="app-root">
@@ -476,13 +534,16 @@ export default function App() {
         isArabic={isArabic} 
         setIsArabic={setIsArabic} 
         congestion={congestion}
-        setCongestion={setCongestion}
+        setCongestion={handleSetCongestion}
         totalSeats={totalSeats}
         currentUser={currentUser}
         onLogout={handleLogout}
         stats={stats}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
+        congestionMode={congestionMode}
+        setCongestionMode={handleSetCongestionMode}
+        studentsInLibraryCount={registrations.filter(r => r.inLibrary).length}
       />
 
       {/* Target Scoped Broadcast Banner */}
@@ -634,93 +695,7 @@ export default function App() {
               </button>
             )}
 
-            {/* ROLE SWITCHER CONTROLS */}
-            <div className="mt-4 pt-4 border-t border-slate-100 text-right space-y-3">
-              <h4 className="text-xs font-bold text-gray-800 flex items-center gap-2 justify-end">
-                <span>{isArabic ? "بوابة محاكاة الأدوار الأكاديمية" : "Academic Role Simulator"}</span>
-                <ShieldCheck className="w-4 h-4 text-indigo-600" />
-              </h4>
-              <p className="text-[10px] text-gray-500 leading-relaxed">
-                {isArabic 
-                  ? "اختر هويتك لتجربة تباين الصلاحيات والشاشات، طوابير الطباعة الذاتية، الإشعارات الموجهة، والدردشة مع الإدارة في الوقت الفعلي."
-                  : "Switch identities to test targeted broadcasts, printing authorization rules, and live helpdesk tickets."}
-              </p>
-
-              <div className="space-y-1.5">
-                <button
-                  onClick={() => {
-                    const newUser = {
-                      name: "يزيد المطيري",
-                      id: "442001928",
-                      email: "y.mutairi@university.edu.sa",
-                      role: "internal_student" as const,
-                      collegeName: "كليات الحاسبات والمعلومات",
-                      department: "هندسة الحاسب"
-                    };
-                    setCurrentUser(newUser);
-                    localStorage.setItem("smart_lib_session_v1", JSON.stringify(newUser));
-                    setActiveTab("bookings");
-                    setSidebarOpen(false);
-                  }}
-                  className={`w-full py-2 px-3 rounded-xl text-[11px] font-semibold transition-all flex items-center justify-between cursor-pointer ${
-                    currentUser.role === "internal_student"
-                      ? "bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold"
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
-                  }`}
-                >
-                  <span className="text-[10px] opacity-60 font-mono">ID: 44200...</span>
-                  <span className="font-bold">{isArabic ? "طالب الحاسب (يزيد)" : "CS Student (Yazeed)"}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    const newUser = {
-                      name: "سارة الحارثي",
-                      id: "442008812",
-                      email: "s.harthi@university.edu.sa",
-                      role: "external_student" as const,
-                      collegeName: "كلية العلوم والآداب",
-                      department: "الكيمياء الحيوية"
-                    };
-                    setCurrentUser(newUser);
-                    localStorage.setItem("smart_lib_session_v1", JSON.stringify(newUser));
-                    setActiveTab("catalog");
-                    setSidebarOpen(false);
-                  }}
-                  className={`w-full py-2 px-3 rounded-xl text-[11px] font-semibold transition-all flex items-center justify-between cursor-pointer ${
-                    currentUser.role === "external_student"
-                      ? "bg-amber-50 border border-amber-200 text-amber-700 font-bold"
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
-                  }`}
-                >
-                  <span className="text-[10px] opacity-60 font-mono">{isArabic ? "زائر" : "Guest"}</span>
-                  <span className="font-bold">{isArabic ? "طالب خارجي (سارة)" : "External Student (Sara)"}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    const newUser = {
-                      name: "مشرف النظام الموحد",
-                      id: "admin-999",
-                      email: "admin@college.edu.sa",
-                      role: "admin" as const
-                    };
-                    setCurrentUser(newUser);
-                    localStorage.setItem("smart_lib_session_v1", JSON.stringify(newUser));
-                    setActiveTab("admin"); // Auto-route to admin console!
-                    setSidebarOpen(false);
-                  }}
-                  className={`w-full py-2 px-3 rounded-xl text-[11px] font-semibold transition-all flex items-center justify-between cursor-pointer ${
-                    currentUser.role === "admin"
-                      ? "bg-rose-50 border border-rose-200 text-rose-700 font-bold"
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
-                  }`}
-                >
-                  <span className="text-[10px] opacity-60 font-mono">{isArabic ? "مسؤول" : "Root Admin"}</span>
-                  <span className="font-bold">{isArabic ? "مشرف البوابة (الأدمن)" : "System Admin"}</span>
-                </button>
-              </div>
-            </div>
+            {/* Simulation controls have been removed per security requirements. Login is handled purely from the external authentication page. */}
 
           </nav>
 
@@ -785,6 +760,7 @@ export default function App() {
                   onSelectSpace={handleSelectSpaceFromMap}
                   completedProjects={graduationProjects}
                   incompleteProjects={incompleteProjects}
+                  currentUserRole={currentUser.role}
                 />
               )}
 
@@ -797,6 +773,7 @@ export default function App() {
                   onBorrowBook={handleBorrowBook}
                   onReturnBook={handleReturnBook}
                   currentUserRole={currentUser.role}
+                  currentUser={currentUser}
                 />
               )}
 
